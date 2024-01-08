@@ -17,7 +17,8 @@ export const USERS_MESSAGES = {
     CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_6_TO_50: 'Xác nhận mật khẩu phải có độ dài từ 6 đến 50 ký tự',
     CONFIRM_PASSWORD_MUST_BE_STRONG:
         'Xác nhận mật khẩu phải có độ dài từ 6 đến 50 ký tự và chứa ít nhất 1 chữ thường, 1 chữ hoa, 1 số và 1 ký tự đặc biệt',
-    CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD: 'Xác nhận mật khẩu phải giống với mật khẩu',
+    CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD: 'Xác nhận mật khẩu phải trùng khớp với mật khẩu',
+    DATE_OF_BIRTH_IS_REQUIRED: 'Ngày sinh không được để trống',
     DATE_OF_BIRTH_MUST_BE_ISO8601: 'Ngày sinh phải là ISO8601',
     SEX_IS_INVALID: 'Giới tính không hợp lệ',
     PHONE_NUMBER_IS_REQUIRED: 'Số điện thoại không được để trống',

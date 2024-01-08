@@ -35,8 +35,8 @@ const postIdCustomFunc = async ({
         })
     }
 
-    const [{ result: post }] = await databaseService.posts
-        .aggregate<{ result: Post }>([
+    const [result] = await databaseService.posts
+        .aggregate<{ post: Post }>([
             {
                 $match: {
                     _id: new ObjectId(value)
@@ -135,19 +135,19 @@ const postIdCustomFunc = async ({
             },
             {
                 $project: {
-                    result: {
+                    post: {
                         $concatArrays: ['$withParent', '$withoutParent']
                     }
                 }
             },
             {
                 $unwind: {
-                    path: '$result'
+                    path: '$post'
                 }
             },
             {
                 $project: {
-                    result: {
+                    post: {
                         user_id: 0,
                         parent_id: 0,
                         mentions: {
@@ -175,6 +175,7 @@ const postIdCustomFunc = async ({
             }
         ])
         .toArray()
+    const post = result?.post
 
     if (post === undefined) {
         throw new ErrorWithStatus({

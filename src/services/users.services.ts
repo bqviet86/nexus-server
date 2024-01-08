@@ -89,7 +89,7 @@ class UserService {
         })
         const { iat, exp } = await this.decodeRefreshToken(refresh_token)
 
-        await Promise.all([
+        const [insertUserResult] = await Promise.all([
             databaseService.users.insertOne(
                 new User({
                     ...payload,
@@ -107,24 +107,48 @@ class UserService {
                 })
             )
         ])
+        const user = await databaseService.users.findOne(
+            { _id: insertUserResult.insertedId },
+            {
+                projection: {
+                    password: 0
+                }
+            }
+        )
 
-        return { access_token, refresh_token }
+        return {
+            user,
+            token: { access_token, refresh_token }
+        }
     }
 
     async login({ user_id, role }: { user_id: string; role: UserRole }) {
         const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken({ user_id, role })
         const { iat, exp } = await this.decodeRefreshToken(refresh_token)
 
-        await databaseService.refreshTokens.insertOne(
-            new RefreshToken({
-                token: refresh_token,
-                user_id: new ObjectId(user_id),
-                iat,
-                exp
-            })
-        )
+        const [user] = await Promise.all([
+            databaseService.users.findOne(
+                { _id: new ObjectId(user_id) },
+                {
+                    projection: {
+                        password: 0
+                    }
+                }
+            ),
+            databaseService.refreshTokens.insertOne(
+                new RefreshToken({
+                    token: refresh_token,
+                    user_id: new ObjectId(user_id),
+                    iat,
+                    exp
+                })
+            )
+        ])
 
-        return { access_token, refresh_token }
+        return {
+            user,
+            token: { access_token, refresh_token }
+        }
     }
 
     async logout(refresh_token: string) {
@@ -171,9 +195,7 @@ class UserService {
             { _id: new ObjectId(user_id) },
             {
                 projection: {
-                    password: 0,
-                    email_verify_token: 0,
-                    forgot_password_token: 0
+                    password: 0
                 }
             }
         )
@@ -235,9 +257,7 @@ class UserService {
                 returnDocument: 'after',
                 includeResultMetadata: false,
                 projection: {
-                    password: 0,
-                    email_verify_token: 0,
-                    forgot_password_token: 0
+                    password: 0
                 }
             }
         )

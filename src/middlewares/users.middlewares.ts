@@ -112,6 +112,9 @@ const confirmPasswordSchema: ParamSchema = {
 }
 
 const dateOfBirthSchema: ParamSchema = {
+    notEmpty: {
+        errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED
+    },
     isISO8601: {
         options: {
             strict: true,
