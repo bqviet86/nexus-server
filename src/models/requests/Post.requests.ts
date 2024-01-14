@@ -8,7 +8,6 @@ export interface CreatePostReqBody {
     content: string
     parent_id: string | null
     hashtags: string[]
-    mentions: string[]
     medias: Media[]
 }
 

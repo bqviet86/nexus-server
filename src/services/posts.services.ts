@@ -34,8 +34,7 @@ class PostService {
                 ...payload,
                 user_id: new ObjectId(user_id),
                 parent_id: payload.parent_id ? new ObjectId(payload.parent_id) : null,
-                hashtags,
-                mentions: payload.mentions.map((mention) => new ObjectId(mention))
+                hashtags
             })
         )
         const post = await databaseService.posts.findOne({ _id: result.insertedId })

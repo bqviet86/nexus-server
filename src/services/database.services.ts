@@ -5,6 +5,7 @@ import User from '~/models/schemas/User.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import Post from '~/models/schemas/Post.schema'
 import Hashtag from '~/models/schemas/Hashtag.schema'
+import VideoStatus from '~/models/schemas/VideoStatus.schema'
 
 config()
 
@@ -42,6 +43,10 @@ class DatabaseService {
 
     get hashtags(): Collection<Hashtag> {
         return this.db.collection(process.env.DB_HASHTAGS_COLLECTION as string)
+    }
+
+    get videoStatus(): Collection<VideoStatus> {
+        return this.db.collection(process.env.DB_VIDEO_STATUS_COLLECTION as string)
     }
 }
 

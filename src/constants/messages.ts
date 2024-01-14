@@ -75,15 +75,17 @@ export const MEDIAS_MESSAGES = {
     VIDEO_NOT_FOUND: 'Không tìm thấy video',
 
     UPLOAD_IMAGE_SUCCESS: 'Tải ảnh lên thành công',
-    UPLOAD_VIDEO_HLS_SUCCESS: 'Tải video lên thành công'
+    UPLOAD_VIDEO_HLS_SUCCESS: 'Tải video lên thành công',
+    GET_VIDEO_STATUS_SUCCESS: 'Lấy trạng thái video thành công'
 }
 
 export const POSTS_MESSAGES = {
     INVALID_TYPE: 'Loại post không hợp lệ',
     CONTENT_MUST_NOT_BE_EMPTY: 'Nội dung không được để trống',
     INVALID_PARENT_ID: 'ID post cha không hợp lệ',
+    PARENT_POST_NOT_FOUND: 'Không tìm thấy post cha',
+    PARENT_ID_MUST_BE_NULL: 'ID post cha phải là null',
     HASHTAGS_MUST_BE_AN_ARRAY_OF_STRING: 'Hashtags phải là một mảng các chuỗi',
-    MENTIONS_MUST_BE_AN_ARRAY_OF_OBJECT_ID: 'Mentions phải là một mảng các ObjectId',
     MEDIAS_MUST_BE_AN_ARRAY_OF_MEDIA_OBJECT: 'Medias phải là một mảng các Media object',
     INVALID_POST_ID: 'ID post không hợp lệ',
     POST_NOT_FOUND: 'Không tìm thấy post',

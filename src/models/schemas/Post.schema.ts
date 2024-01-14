@@ -10,7 +10,6 @@ interface PostConstructor {
     content: string
     parent_id: ObjectId | null // null khi post gốc
     hashtags: ObjectId[]
-    mentions: ObjectId[]
     medias: Media[]
     created_at?: Date
     updated_at?: Date
@@ -23,7 +22,6 @@ export default class Post {
     content: string
     parent_id: ObjectId | null // null khi post gốc
     hashtags: ObjectId[]
-    mentions: ObjectId[]
     medias: Media[]
     created_at?: Date
     updated_at?: Date
@@ -37,7 +35,6 @@ export default class Post {
         this.content = post.content
         this.parent_id = post.parent_id
         this.hashtags = post.hashtags
-        this.mentions = post.mentions
         this.medias = post.medias
         this.created_at = post.created_at || date
         this.updated_at = post.updated_at || date

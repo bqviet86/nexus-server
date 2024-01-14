@@ -18,6 +18,13 @@ export enum MediaTypes {
     Video = 'video'
 }
 
+export enum VideoEncodingStatus {
+    Pending = 'pending',
+    Processing = 'processing',
+    Success = 'success',
+    Failed = 'failed'
+}
+
 export enum PostType {
     Post = 'post',
     Share = 'share'

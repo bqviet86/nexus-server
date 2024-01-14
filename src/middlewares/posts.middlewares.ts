@@ -64,14 +64,6 @@ const postIdCustomFunc = async ({
                 }
             },
             {
-                $lookup: {
-                    from: 'users',
-                    localField: 'mentions',
-                    foreignField: '_id',
-                    as: 'mentions'
-                }
-            },
-            {
                 $facet: {
                     withParent: [
                         {
@@ -114,14 +106,6 @@ const postIdCustomFunc = async ({
                                 foreignField: '_id',
                                 as: 'parent_post.hashtags'
                             }
-                        },
-                        {
-                            $lookup: {
-                                from: 'users',
-                                localField: 'parent_post.mentions',
-                                foreignField: '_id',
-                                as: 'parent_post.mentions'
-                            }
                         }
                     ],
                     withoutParent: [
@@ -150,10 +134,6 @@ const postIdCustomFunc = async ({
                     post: {
                         user_id: 0,
                         parent_id: 0,
-                        mentions: {
-                            password: 0,
-                            role: 0
-                        },
                         user: {
                             password: 0,
                             role: 0
@@ -161,10 +141,6 @@ const postIdCustomFunc = async ({
                         parent_post: {
                             user_id: 0,
                             parent_id: 0,
-                            mentions: {
-                                password: 0,
-                                role: 0
-                            },
                             user: {
                                 password: 0,
                                 role: 0
@@ -229,20 +205,33 @@ export const createPostValidator = validate(
             },
             parent_id: {
                 custom: {
-                    options: (value, { req }) => {
+                    options: async (value, { req }) => {
                         const type = (req.body as CreatePostReqBody).type
 
-                        if (type === PostType.Share && !ObjectId.isValid(value)) {
-                            throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.INVALID_PARENT_ID,
-                                status: HTTP_STATUS.BAD_REQUEST
+                        if (type === PostType.Share) {
+                            if (!ObjectId.isValid(value)) {
+                                throw new ErrorWithStatus({
+                                    message: POSTS_MESSAGES.INVALID_PARENT_ID,
+                                    status: HTTP_STATUS.BAD_REQUEST
+                                })
+                            }
+
+                            const parentPost = await databaseService.posts.findOne({
+                                _id: new ObjectId(value)
                             })
+
+                            if (parentPost === null) {
+                                throw new ErrorWithStatus({
+                                    message: POSTS_MESSAGES.PARENT_POST_NOT_FOUND,
+                                    status: HTTP_STATUS.NOT_FOUND
+                                })
+                            }
                         }
 
                         // parent_id chỉ được null khi type là post gốc
                         if (type === PostType.Post && value !== null) {
                             throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.INVALID_PARENT_ID,
+                                message: POSTS_MESSAGES.PARENT_ID_MUST_BE_NULL,
                                 status: HTTP_STATUS.BAD_REQUEST
                             })
                         }
@@ -259,22 +248,6 @@ export const createPostValidator = validate(
                         if (value.some((hashtag) => typeof hashtag !== 'string')) {
                             throw new ErrorWithStatus({
                                 message: POSTS_MESSAGES.HASHTAGS_MUST_BE_AN_ARRAY_OF_STRING,
-                                status: HTTP_STATUS.BAD_REQUEST
-                            })
-                        }
-
-                        return true
-                    }
-                }
-            },
-            mentions: {
-                isArray: true,
-                custom: {
-                    options: (value: any[]) => {
-                        // mentions phải là mảng chuỗi các ObjectId
-                        if (value.some((mention) => !ObjectId.isValid(mention))) {
-                            throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.MENTIONS_MUST_BE_AN_ARRAY_OF_OBJECT_ID,
                                 status: HTTP_STATUS.BAD_REQUEST
                             })
                         }
