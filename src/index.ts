@@ -1,4 +1,5 @@
 import express from 'express'
+import { createServer } from 'http'
 import { config } from 'dotenv'
 import cors from 'cors'
 
@@ -10,11 +11,13 @@ import postsRouter from './routes/posts.routes'
 import staticRouter from './routes/static.routes'
 import databaseService from '~/services/database.services'
 import { initFolder } from './utils/file'
+import initSocket from './utils/socket'
 
 config()
 
 const port = process.env.PORT || 4000
 const app = express()
+const httpServer = createServer(app)
 
 // Init folders
 initFolder(UPLOAD_IMAGE_TEMP_DIR)
@@ -27,7 +30,7 @@ databaseService.connect()
 app.use(express.json())
 app.use(
     cors({
-        origin: ['http://localhost:3000'],
+        origin: process.env.CLIENT_URL,
         credentials: true
     })
 )
@@ -41,4 +44,8 @@ app.use('/static', staticRouter)
 // Error handler
 app.use(defaultErrorHandler)
 
-app.listen(port, () => console.log(`Listen on http://localhost:${port}`))
+// Socket
+initSocket(httpServer)
+
+// Listen
+httpServer.listen(port, () => console.log(`Listen on http://localhost:${port}`))
