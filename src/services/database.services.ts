@@ -6,6 +6,7 @@ import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import Post from '~/models/schemas/Post.schema'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
+import Notification from '~/models/schemas/Notification.schema'
 
 config()
 
@@ -47,6 +48,10 @@ class DatabaseService {
 
     get videoStatus(): Collection<VideoStatus> {
         return this.db.collection(process.env.DB_VIDEO_STATUS_COLLECTION as string)
+    }
+
+    get notifications(): Collection<Notification> {
+        return this.db.collection(process.env.DB_NOTIFICATIONS_COLLECTION as string)
     }
 }
 

@@ -29,3 +29,10 @@ export enum PostType {
     Post = 'post',
     Share = 'share'
 }
+
+export enum NotificationType {
+    Like = 'like',
+    Comment = 'comment',
+    Share = 'share',
+    NewPost = 'new_post'
+}

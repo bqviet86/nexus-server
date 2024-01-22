@@ -1,12 +1,13 @@
 import { ObjectId, WithId } from 'mongodb'
 
 import { POSTS_MESSAGES } from '~/constants/messages'
-import { MediaTypes, VideoEncodingStatus } from '~/constants/enums'
+import { MediaTypes, NotificationType, VideoEncodingStatus } from '~/constants/enums'
 import { CreatePostReqBody } from '~/models/requests/Post.requests'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import Post from '~/models/schemas/Post.schema'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
 import mediaService from './medias.services'
+import notificationService from './notifications.services'
 import databaseService from './database.services'
 import { io, socketUsers } from '~/utils/socket'
 
@@ -41,7 +42,7 @@ class PostService {
                 hashtags
             })
         )
-        const post = await databaseService.posts.findOne({ _id: result.insertedId })
+        const post = (await databaseService.posts.findOne({ _id: result.insertedId })) as WithId<Post>
 
         // Check video status
         const videos = payload.medias.filter((media) => media.type === MediaTypes.Video)
@@ -54,16 +55,21 @@ class PostService {
                         return mediaService.getVideoStatus(idName)
                     })
                 )
+                console.log('videosStatus', videosStatus)
                 const isAllVideoReady = (videosStatus as WithId<VideoStatus>[]).every(
                     (videoStatus) => videoStatus.status === VideoEncodingStatus.Success
                 )
+                console.log('isAllVideoReady', isAllVideoReady)
 
                 if (isAllVideoReady) {
+                    const notification = await notificationService.createNotification({
+                        user_to_id: user_id,
+                        post_id: post._id.toString(),
+                        type: NotificationType.NewPost
+                    })
+
                     socketUsers[user_id].socket_ids.forEach((socket_id) => {
-                        io.to(socket_id).emit('create_post_successfully', {
-                            message: POSTS_MESSAGES.CREATE_POST_SUCCESSFULLY,
-                            result: post
-                        })
+                        io.to(socket_id).emit('create_post_successfully', notification)
                     })
 
                     clearInterval(intervalId)
