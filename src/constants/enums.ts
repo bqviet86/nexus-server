@@ -36,3 +36,9 @@ export enum NotificationType {
     Share = 'share',
     NewPost = 'new_post'
 }
+
+export enum NotificationTag {
+    All = 'all',
+    Read = 'read',
+    Unread = 'unread'
+}

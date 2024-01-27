@@ -95,3 +95,11 @@ export const POSTS_MESSAGES = {
     GET_POST_SUCCESSFULLY: 'Lấy post thành công',
     DELETE_POST_SUCCESSFULLY: 'Xóa post thành công'
 }
+
+export const NOTIFICATIONS_MESSAGES = {
+    INVALID_TAG_VALUE: 'Giá trị tag không hợp lệ',
+
+    GET_ALL_NOTIFICATIONS_SUCCESSFULLY: 'Lấy tất cả thông báo thành công',
+    GET_UNREAD_NOTIFICATIONS_SUCCESSFULLY: 'Lấy tất cả thông báo chưa đọc thành công',
+    READ_ALL_NOTIFICATIONS_SUCCESSFULLY: 'Đọc tất cả thông báo thành công'
+}

@@ -10,6 +10,7 @@ interface NotificationConstructor {
     type: NotificationType
     is_read?: boolean
     created_at?: Date
+    updated_at?: Date
 }
 
 export default class Notification {
@@ -20,6 +21,7 @@ export default class Notification {
     type: NotificationType
     is_read: boolean
     created_at?: Date
+    updated_at?: Date
 
     constructor(notification: NotificationConstructor) {
         const date = new Date()
@@ -31,5 +33,6 @@ export default class Notification {
         this.type = notification.type
         this.is_read = notification.is_read || false
         this.created_at = notification.created_at || date
+        this.updated_at = notification.updated_at || date
     }
 }
