@@ -3,10 +3,11 @@ import { Router } from 'express'
 import {
     getAllNotificationsController,
     getUnreadNotificationsController,
-    readAllNotificationsController
+    readAllNotificationsController,
+    readNotificationController
 } from '~/controllers/notifications.controllers'
 import { paginationValidator } from '~/middlewares/common.middlewares'
-import { getAllNotificationsValidator } from '~/middlewares/notifications.middlewares'
+import { getAllNotificationsValidator, readNotificationValidator } from '~/middlewares/notifications.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
@@ -39,12 +40,19 @@ notificationsRouter.get(
  */
 notificationsRouter.get('/unread', accessTokenValidator, wrapRequestHandler(getUnreadNotificationsController))
 
+notificationsRouter.patch(
+    '/read/:notification_id',
+    accessTokenValidator,
+    readNotificationValidator,
+    wrapRequestHandler(readNotificationController)
+)
+
 /**
  * Description: Read all notifications
  * Path: /read-all
- * Method: PUT
+ * Method: PATCH
  * Header: { Authorization: Bearer <access_token> }
  */
-notificationsRouter.put('/read-all', accessTokenValidator, wrapRequestHandler(readAllNotificationsController))
+notificationsRouter.patch('/read-all', accessTokenValidator, wrapRequestHandler(readAllNotificationsController))
 
 export default notificationsRouter

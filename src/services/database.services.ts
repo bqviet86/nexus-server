@@ -7,6 +7,7 @@ import Post from '~/models/schemas/Post.schema'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
 import Notification from '~/models/schemas/Notification.schema'
+import Friend from '~/models/schemas/Friend.schema'
 
 config()
 
@@ -52,6 +53,10 @@ class DatabaseService {
 
     get notifications(): Collection<Notification> {
         return this.db.collection(process.env.DB_NOTIFICATIONS_COLLECTION as string)
+    }
+
+    get friends(): Collection<Friend> {
+        return this.db.collection(process.env.DB_FRIENDS_COLLECTION as string)
     }
 }
 

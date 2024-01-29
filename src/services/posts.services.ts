@@ -1,11 +1,12 @@
 import { ObjectId, WithId } from 'mongodb'
 
 import { POSTS_MESSAGES } from '~/constants/messages'
-import { MediaTypes, NotificationType, VideoEncodingStatus } from '~/constants/enums'
+import { MediaTypes, NotificationPostAction, NotificationType, VideoEncodingStatus } from '~/constants/enums'
 import { CreatePostReqBody } from '~/models/requests/Post.requests'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import Post from '~/models/schemas/Post.schema'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
+import Notification from '~/models/schemas/Notification.schema'
 import mediaService from './medias.services'
 import notificationService from './notifications.services'
 import databaseService from './database.services'
@@ -64,12 +65,15 @@ class PostService {
                 if (isAllVideoReady) {
                     const notification = await notificationService.createNotification({
                         user_to_id: user_id,
-                        post_id: post._id.toString(),
-                        type: NotificationType.NewPost
+                        type: NotificationType.Post,
+                        action: NotificationPostAction.HandlePostSuccess,
+                        payload: {
+                            post_id: post._id
+                        }
                     })
 
                     socketUsers[user_id].socket_ids.forEach((socket_id) => {
-                        io.to(socket_id).emit('create_post_successfully', notification)
+                        io.to(socket_id).emit('handle_post_success', notification)
                     })
 
                     clearInterval(intervalId)

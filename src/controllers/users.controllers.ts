@@ -12,6 +12,9 @@ import {
     LogoutReqBody,
     RefreshTokenReqBody,
     RegisterReqBody,
+    ResponseFriendRequestReqBody,
+    ResponseFriendRequestReqParams,
+    SendFriendRequestReqParams,
     TokenPayload,
     UpdateMeReqBody
 } from '~/models/requests/User.requests'
@@ -97,6 +100,26 @@ export const changePasswordController = async (
     const { user_id } = req.decoded_authorization as TokenPayload
     const { password } = req.body
     const result = await usersService.changePassword(user_id, password)
+
+    return res.json(result)
+}
+
+export const sendFriendRequestController = async (req: Request<SendFriendRequestReqParams>, res: Response) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const { user_to_id } = req.params
+    const result = await usersService.sendFriendRequest(user_id, user_to_id)
+
+    return res.json(result)
+}
+
+export const responseFriendRequestController = async (
+    req: Request<ResponseFriendRequestReqParams, any, ResponseFriendRequestReqBody>,
+    res: Response
+) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const { user_from_id } = req.params
+    const { status } = req.body
+    const result = await usersService.responseFriendRequest({ user_from_id, user_to_id: user_id, status })
 
     return res.json(result)
 }

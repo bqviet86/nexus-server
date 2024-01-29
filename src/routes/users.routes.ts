@@ -9,6 +9,8 @@ import {
     logoutController,
     refreshTokenController,
     registerController,
+    responseFriendRequestController,
+    sendFriendRequestController,
     updateAvatarController,
     updateMeController
 } from '~/controllers/users.controllers'
@@ -20,6 +22,8 @@ import {
     loginValidator,
     refreshTokenValidator,
     registerValidator,
+    responseFriendRequestValidator,
+    sendFriendRequestValidator,
     updateMeValidator
 } from '~/middlewares/users.middlewares'
 import { UpdateMeReqBody } from '~/models/requests/User.requests'
@@ -111,6 +115,33 @@ usersRouter.put(
     accessTokenValidator,
     changePasswordValidator,
     wrapRequestHandler(changePasswordController)
+)
+
+/**
+ * Description: Send friend request
+ * Path: /friend/request/:user_to_id
+ * Method: POST
+ * Header: { Authorization: Bearer <access_token> }
+ */
+usersRouter.post(
+    '/friend/request/:user_to_id',
+    accessTokenValidator,
+    sendFriendRequestValidator,
+    wrapRequestHandler(sendFriendRequestController)
+)
+
+/**
+ * Description: Response friend request
+ * Path: /friend/response/:user_from_id
+ * Method: PATCH
+ * Header: { Authorization: Bearer <access_token> }
+ * Body: { status: FriendStatus }
+ */
+usersRouter.patch(
+    '/friend/response/:user_from_id',
+    accessTokenValidator,
+    responseFriendRequestValidator,
+    wrapRequestHandler(responseFriendRequestController)
 )
 
 // Admin routes

@@ -6,7 +6,7 @@ import { capitalize } from 'lodash'
 import { ObjectId } from 'mongodb'
 import { config } from 'dotenv'
 
-import { Sex, UserRole } from '~/constants/enums'
+import { FriendStatus, Sex, UserRole } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
@@ -21,6 +21,8 @@ import { validate } from '~/utils/validation'
 config()
 
 const sexValues = stringEnumToArray(Sex)
+
+const friendStatusValues = stringEnumToArray(FriendStatus)
 
 // Lỗi mặc định 422, muón lỗi khác thì dùng ErrorWithStatus
 const nameSchema: ParamSchema = {
@@ -140,6 +142,35 @@ const phoneNumberSchema: ParamSchema = {
         errorMessage: USERS_MESSAGES.PHONE_NUMBER_IS_INVALID
     },
     trim: true
+}
+
+const userIdSchema: ParamSchema = {
+    trim: true,
+    custom: {
+        options: async (value: string, { req }) => {
+            const { user_id } = req.decoded_authorization as TokenPayload
+
+            if (!ObjectId.isValid(value) || value === user_id) {
+                throw new ErrorWithStatus({
+                    message: USERS_MESSAGES.USER_ID_IS_INVALID,
+                    status: HTTP_STATUS.BAD_REQUEST
+                })
+            }
+
+            const user = await databaseService.users.findOne({
+                _id: new ObjectId(value)
+            })
+
+            if (user === null) {
+                throw new ErrorWithStatus({
+                    message: USERS_MESSAGES.USER_NOT_FOUND,
+                    status: HTTP_STATUS.NOT_FOUND
+                })
+            }
+
+            return true
+        }
+    }
 }
 
 export const registerValidator = validate(
@@ -341,6 +372,30 @@ export const changePasswordValidator = validate(
             confirm_password: confirmPasswordSchema
         },
         ['body']
+    )
+)
+
+export const sendFriendRequestValidator = validate(
+    checkSchema(
+        {
+            user_to_id: userIdSchema
+        },
+        ['params']
+    )
+)
+
+export const responseFriendRequestValidator = validate(
+    checkSchema(
+        {
+            user_from_id: userIdSchema,
+            status: {
+                isIn: {
+                    options: [friendStatusValues],
+                    errorMessage: USERS_MESSAGES.FRIEND_STATUS_IS_INVALID
+                }
+            }
+        },
+        ['params', 'body']
     )
 )
 

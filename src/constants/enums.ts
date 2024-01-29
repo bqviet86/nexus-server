@@ -31,14 +31,30 @@ export enum PostType {
 }
 
 export enum NotificationType {
+    Post = 'post',
+    Friend = 'friend'
+}
+
+export enum NotificationPostAction {
     Like = 'like',
     Comment = 'comment',
     Share = 'share',
-    NewPost = 'new_post'
+    HandlePostSuccess = 'handle_post_success'
+}
+
+export enum NotificationFriendAction {
+    NewFriendRequest = 'new_friend_request',
+    AcceptFriendRequest = 'accept_friend_request'
 }
 
 export enum NotificationTag {
     All = 'all',
     Read = 'read',
     Unread = 'unread'
+}
+
+export enum FriendStatus {
+    Pending = 'pending',
+    Accepted = 'accepted',
+    Declined = 'declined'
 }

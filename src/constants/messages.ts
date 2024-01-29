@@ -33,16 +33,9 @@ export const USERS_MESSAGES = {
     INVALID_FORGOT_PASSWORD_TOKEN: 'Forgot password token không hợp lệ',
     USER_NOT_VERIFIED: 'Người dùng chưa được xác thực',
     OLD_PASSWORD_NOT_MATCH: 'Mật khẩu cũ không khớp',
-    INVALID_ADDRESS_ID: 'ID địa chỉ không hợp lệ',
-    ADDRESS_NOT_FOUND: 'Không tìm thấy địa chỉ',
-    PROVINCE_IS_REQUIRED: 'Tỉnh/Thành phố không được để trống',
-    PROVINCE_MUST_BE_A_STRING: 'Tỉnh/Thành phố phải là một chuỗi',
-    DISTRICT_IS_REQUIRED: 'Quận/Huyện không được để trống',
-    DISTRICT_MUST_BE_A_STRING: 'Quận/Huyện phải là một chuỗi',
-    WARD_IS_REQUIRED: 'Phường/Xã không được để trống',
-    WARD_MUST_BE_A_STRING: 'Phường/Xã phải là một chuỗi',
-    SPECIFIC_ADDRESS_IS_REQUIRED: 'Địa chỉ cụ thể không được để trống',
-    SPECIFIC_ADDRESS_MUST_BE_A_STRING: 'Địa chỉ cụ thể phải là một chuỗi',
+    USER_ID_IS_REQUIRED: 'ID người dùng không được để trống',
+    USER_ID_IS_INVALID: 'ID người dùng không hợp lệ',
+    FRIEND_STATUS_IS_INVALID: 'Trạng thái bạn bè không hợp lệ',
     USER_NOT_ADMIN: 'Người dùng không phải là admin',
     SEARCH_MUST_BE_A_STRING: 'Từ khóa tìm kiếm (search) phải là một chuỗi',
 
@@ -61,10 +54,7 @@ export const USERS_MESSAGES = {
     UPDATE_AVATAR_SUCCESS: 'Cập nhật ảnh đại diện thành công',
     UPDATE_ME_SUCCESS: 'Cập nhật thông tin người dùng thành công',
     CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công',
-    CREATE_ADDRESS_SUCCESS: 'Tạo địa chỉ thành công',
-    GET_ADDRESS_SUCCESS: 'Lấy địa chỉ thành công',
-    UPDATE_ADDRESS_SUCCESS: 'Cập nhật địa chỉ thành công',
-    DELETE_ADDRESS_SUCCESS: 'Xóa địa chỉ thành công'
+    SEND_FRIEND_REQUEST_SUCCESS: 'Gửi lời mời kết bạn thành công'
 }
 
 export const MEDIAS_MESSAGES = {
@@ -98,8 +88,11 @@ export const POSTS_MESSAGES = {
 
 export const NOTIFICATIONS_MESSAGES = {
     INVALID_TAG_VALUE: 'Giá trị tag không hợp lệ',
+    INVALID_NOTIFICATION_ID: 'ID thông báo không hợp lệ',
+    NOTIFICATION_NOT_FOUND: 'Không tìm thấy thông báo',
 
     GET_ALL_NOTIFICATIONS_SUCCESSFULLY: 'Lấy tất cả thông báo thành công',
     GET_UNREAD_NOTIFICATIONS_SUCCESSFULLY: 'Lấy tất cả thông báo chưa đọc thành công',
+    READ_NOTIFICATION_SUCCESSFULLY: 'Đọc thông báo thành công',
     READ_ALL_NOTIFICATIONS_SUCCESSFULLY: 'Đọc tất cả thông báo thành công'
 }

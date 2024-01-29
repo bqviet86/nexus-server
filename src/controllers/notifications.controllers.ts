@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 
 import { NOTIFICATIONS_MESSAGES } from '~/constants/messages'
-import { GetAllNotificationsReqQuery } from '~/models/requests/Notification.requests'
+import { GetAllNotificationsReqQuery, ReadNotificationReqParams } from '~/models/requests/Notification.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
 import notificationService from '~/services/notifications.services'
 
@@ -40,6 +40,14 @@ export const getUnreadNotificationsController = async (req: Request, res: Respon
         message: NOTIFICATIONS_MESSAGES.GET_UNREAD_NOTIFICATIONS_SUCCESSFULLY,
         result
     })
+}
+
+export const readNotificationController = async (req: Request<ReadNotificationReqParams>, res: Response) => {
+    const { notification_id } = req.params
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const result = await notificationService.readNotification({ notification_id, user_id })
+
+    return res.json(result)
 }
 
 export const readAllNotificationsController = async (req: Request, res: Response) => {

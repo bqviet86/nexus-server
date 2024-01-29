@@ -1,6 +1,7 @@
+import { ParamsDictionary } from 'express-serve-static-core'
 import { JwtPayload } from 'jsonwebtoken'
 
-import { TokenTypes, Sex, UserRole } from '~/constants/enums'
+import { TokenTypes, Sex, UserRole, FriendStatus } from '~/constants/enums'
 
 export interface RegisterReqBody {
     name: string
@@ -45,4 +46,16 @@ export interface ChangePasswordReqBody {
     old_password: string
     password: string
     confirm_password: string
+}
+
+export interface SendFriendRequestReqParams extends ParamsDictionary {
+    user_to_id: string
+}
+
+export interface ResponseFriendRequestReqParams extends ParamsDictionary {
+    user_from_id: string
+}
+
+export interface ResponseFriendRequestReqBody {
+    status: FriendStatus
 }

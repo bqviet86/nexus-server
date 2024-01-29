@@ -1,23 +1,66 @@
 import { Request } from 'express'
 import path from 'path'
 import fsPromise from 'fs/promises'
-import { ObjectId } from 'mongodb'
+import { Document, ObjectId } from 'mongodb'
 import { config } from 'dotenv'
 
-import { TokenTypes, UserRole } from '~/constants/enums'
+import { FriendStatus, TokenTypes, UserRole } from '~/constants/enums'
 import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
+import Friend from '~/models/schemas/Friend.schema'
 import databaseService from './database.services'
 import mediaService from './medias.services'
 import { hashPassword } from '~/utils/crypto'
 import { signToken, verifyToken } from '~/utils/jwt'
+import { io, socketUsers } from '~/utils/socket'
 
 config()
 
 class UserService {
+    private commonAggregateFriends: Document[] = [
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'user_from_id',
+                foreignField: '_id',
+                as: 'user_from'
+            }
+        },
+        {
+            $unwind: {
+                path: '$user_from'
+            }
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'user_to_id',
+                foreignField: '_id',
+                as: 'user_to'
+            }
+        },
+        {
+            $unwind: {
+                path: '$user_to'
+            }
+        },
+        {
+            $project: {
+                user_from: {
+                    password: 0,
+                    role: 0
+                },
+                user_to: {
+                    password: 0,
+                    role: 0
+                }
+            }
+        }
+    ]
+
     private signAccessToken({ user_id, role }: { user_id: string; role?: UserRole }) {
         return signToken({
             payload: {
@@ -111,7 +154,8 @@ class UserService {
             { _id: insertUserResult.insertedId },
             {
                 projection: {
-                    password: 0
+                    password: 0,
+                    role: 0
                 }
             }
         )
@@ -131,7 +175,8 @@ class UserService {
                 { _id: new ObjectId(user_id) },
                 {
                     projection: {
-                        password: 0
+                        password: 0,
+                        role: 0
                     }
                 }
             ),
@@ -195,7 +240,8 @@ class UserService {
             { _id: new ObjectId(user_id) },
             {
                 projection: {
-                    password: 0
+                    password: 0,
+                    role: 0
                 }
             }
         )
@@ -257,7 +303,8 @@ class UserService {
                 returnDocument: 'after',
                 includeResultMetadata: false,
                 projection: {
-                    password: 0
+                    password: 0,
+                    role: 0
                 }
             }
         )
@@ -279,6 +326,66 @@ class UserService {
         )
 
         return { message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS }
+    }
+
+    async sendFriendRequest(user_from_id: string, user_to_id: string) {
+        const result = await databaseService.friends.insertOne(
+            new Friend({
+                user_from_id: new ObjectId(user_from_id),
+                user_to_id: new ObjectId(user_to_id)
+            })
+        )
+        const [friend] = await databaseService.friends
+            .aggregate<Friend>([
+                {
+                    $match: {
+                        _id: result.insertedId
+                    }
+                },
+                ...this.commonAggregateFriends
+            ])
+            .toArray()
+
+        socketUsers[user_to_id].socket_ids.forEach((socket_id) => {
+            io.to(socket_id).emit('new_friend_request', friend)
+        })
+
+        return { message: USERS_MESSAGES.SEND_FRIEND_REQUEST_SUCCESS }
+    }
+
+    async responseFriendRequest({
+        user_from_id,
+        user_to_id,
+        status
+    }: {
+        user_from_id: string
+        user_to_id: string
+        status: FriendStatus
+    }) {
+        // Aggregate cập nhật trạng thái lời mời kết bạn
+        const [friend] = await databaseService.friends
+            .aggregate<Friend>([
+                {
+                    $match: {
+                        user_from_id: new ObjectId(user_from_id),
+                        user_to_id: new ObjectId(user_to_id)
+                    }
+                },
+                {
+                    $set: {
+                        status,
+                        updated_at: new Date()
+                    }
+                },
+                ...this.commonAggregateFriends
+            ])
+            .toArray()
+
+        socketUsers[user_from_id].socket_ids.forEach((socket_id) => {
+            io.to(socket_id).emit(`${status === FriendStatus.Accepted ? 'accept' : 'decline'}_friend_request`)
+        })
+
+        return { message: USERS_MESSAGES.SEND_FRIEND_REQUEST_SUCCESS }
     }
 }
 
