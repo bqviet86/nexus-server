@@ -1,5 +1,5 @@
 import { MediaTypes } from '~/constants/enums'
-import { Media } from '~/models/Others'
+import { Media } from '~/models/Types'
 import { numberEnumToArray, stringEnumToArray } from './commons'
 
 export const isMedia = (variable: any): variable is Media => {

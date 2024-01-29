@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 
 import { PostType } from '~/constants/enums'
-import { Media } from '../Others'
+import { Media } from '../Types'
 
 interface PostConstructor {
     _id?: ObjectId

@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 
 import { NotificationType } from '~/constants/enums'
-import { NotificationAction, NotificationPayload } from '../Others'
+import { NotificationAction, NotificationPayload } from '../Types'
 
 interface NotificationConstructor {
     _id?: ObjectId

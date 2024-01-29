@@ -7,7 +7,7 @@ import mime from 'mime'
 
 import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import { MediaTypes, VideoEncodingStatus } from '~/constants/enums'
-import { Media } from '~/models/Others'
+import { Media } from '~/models/Types'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
 import databaseService from './database.services'
 import { getFiles, getNameFromFilename, handleUploadImage, handleUploadVideo } from '~/utils/file'

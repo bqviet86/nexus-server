@@ -1,8 +1,8 @@
 import { ParamsDictionary } from 'express-serve-static-core'
 
 import { NotificationTag, NotificationType } from '~/constants/enums'
-import { PaginationReqQuery } from './common.requests'
-import { NotificationAction, NotificationPayload } from '../Others'
+import { PaginationReqQuery } from './Common.requests'
+import { NotificationAction, NotificationPayload } from '../Types'
 
 export interface CreateNotificationBody {
     user_from_id?: string

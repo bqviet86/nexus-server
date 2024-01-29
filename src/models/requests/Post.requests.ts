@@ -1,7 +1,7 @@
 import { ParamsDictionary } from 'express-serve-static-core'
 
 import { PostType } from '~/constants/enums'
-import { Media } from '../Others'
+import { Media } from '../Types'
 
 export interface CreatePostReqBody {
     type: PostType
