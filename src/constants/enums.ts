@@ -36,14 +36,14 @@ export enum NotificationType {
 }
 
 export enum NotificationPostAction {
-    Like = 'like',
-    Comment = 'comment',
-    Share = 'share',
+    LikePost = 'like_post',
+    CommentPost = 'comment_post',
+    SharePost = 'share_post',
     HandlePostSuccess = 'handle_post_success'
 }
 
 export enum NotificationFriendAction {
-    NewFriendRequest = 'new_friend_request',
+    SendFriendRequest = 'send_friend_request',
     AcceptFriendRequest = 'accept_friend_request'
 }
 

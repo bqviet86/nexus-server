@@ -1,4 +1,4 @@
-import { checkSchema } from 'express-validator'
+import { ParamSchema, checkSchema } from 'express-validator'
 import { ObjectId } from 'mongodb'
 
 import { NotificationTag } from '~/constants/enums'
@@ -11,6 +11,42 @@ import { stringEnumToArray } from '~/utils/commons'
 import { validate } from '~/utils/validation'
 
 const tagValues = stringEnumToArray(NotificationTag)
+
+const notificationIdSchema: ParamSchema = {
+    trim: true,
+    custom: {
+        options: async (value: string, { req }) => {
+            const { user_id } = req.decoded_authorization as TokenPayload
+
+            if (!ObjectId.isValid(value)) {
+                throw new ErrorWithStatus({
+                    message: NOTIFICATIONS_MESSAGES.INVALID_NOTIFICATION_ID,
+                    status: HTTP_STATUS.BAD_REQUEST
+                })
+            }
+
+            const notification = await databaseService.notifications.findOne({
+                _id: new ObjectId(value),
+                user_to_id: new ObjectId(user_id)
+            })
+
+            if (notification === null) {
+                throw new ErrorWithStatus({
+                    message: NOTIFICATIONS_MESSAGES.NOTIFICATION_NOT_FOUND,
+                    status: HTTP_STATUS.NOT_FOUND
+                })
+            }
+
+            return true
+        }
+    }
+}
+
+const isReadSchema: ParamSchema = {
+    isBoolean: {
+        errorMessage: NOTIFICATIONS_MESSAGES.INVALID_IS_READ_VALUE
+    }
+}
 
 export const getAllNotificationsValidator = validate(
     checkSchema(
@@ -27,38 +63,29 @@ export const getAllNotificationsValidator = validate(
     )
 )
 
-export const readNotificationValidator = validate(
+export const updateNotificationValidator = validate(
     checkSchema(
         {
-            notification_id: {
-                trim: true,
-                custom: {
-                    options: async (value: string, { req }) => {
-                        const { user_id } = req.decoded_authorization as TokenPayload
+            notification_id: notificationIdSchema,
+            is_read: isReadSchema
+        },
+        ['params', 'body']
+    )
+)
 
-                        if (!ObjectId.isValid(value)) {
-                            throw new ErrorWithStatus({
-                                message: NOTIFICATIONS_MESSAGES.INVALID_NOTIFICATION_ID,
-                                status: HTTP_STATUS.BAD_REQUEST
-                            })
-                        }
+export const updateAllNotificationValidator = validate(
+    checkSchema(
+        {
+            is_read: isReadSchema
+        },
+        ['body']
+    )
+)
 
-                        const notification = await databaseService.notifications.findOne({
-                            _id: new ObjectId(value),
-                            user_to_id: new ObjectId(user_id)
-                        })
-
-                        if (notification === null) {
-                            throw new ErrorWithStatus({
-                                message: NOTIFICATIONS_MESSAGES.NOTIFICATION_NOT_FOUND,
-                                status: HTTP_STATUS.NOT_FOUND
-                            })
-                        }
-
-                        return true
-                    }
-                }
-            }
+export const deleteNotificationValidator = validate(
+    checkSchema(
+        {
+            notification_id: notificationIdSchema
         },
         ['params']
     )

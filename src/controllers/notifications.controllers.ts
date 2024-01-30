@@ -2,7 +2,13 @@ import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 
 import { NOTIFICATIONS_MESSAGES } from '~/constants/messages'
-import { GetAllNotificationsReqQuery, ReadNotificationReqParams } from '~/models/requests/Notification.requests'
+import {
+    DeleteNotificationReqParams,
+    GetAllNotificationsReqQuery,
+    UpdateAllNotificationReqBody,
+    UpdateNotificationReqBody,
+    UpdateNotificationReqParams
+} from '~/models/requests/Notification.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
 import notificationService from '~/services/notifications.services'
 
@@ -42,17 +48,33 @@ export const getUnreadNotificationsController = async (req: Request, res: Respon
     })
 }
 
-export const readNotificationController = async (req: Request<ReadNotificationReqParams>, res: Response) => {
+export const updateNotificationController = async (
+    req: Request<UpdateNotificationReqParams, any, UpdateNotificationReqBody>,
+    res: Response
+) => {
     const { notification_id } = req.params
+    const { is_read } = req.body
     const { user_id } = req.decoded_authorization as TokenPayload
-    const result = await notificationService.readNotification({ notification_id, user_id })
+    const result = await notificationService.updateNotification({ notification_id, user_id, is_read })
 
     return res.json(result)
 }
 
-export const readAllNotificationsController = async (req: Request, res: Response) => {
+export const updateAllNotificationController = async (
+    req: Request<ParamsDictionary, any, UpdateAllNotificationReqBody>,
+    res: Response
+) => {
+    const { is_read } = req.body
     const { user_id } = req.decoded_authorization as TokenPayload
-    const result = await notificationService.readAllNotifications(user_id)
+    const result = await notificationService.updateAllNotification({ user_id, is_read })
+
+    return res.json(result)
+}
+
+export const deleteNotificationController = async (req: Request<DeleteNotificationReqParams>, res: Response) => {
+    const { notification_id } = req.params
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const result = await notificationService.deleteNotification({ notification_id, user_id })
 
     return res.json(result)
 }

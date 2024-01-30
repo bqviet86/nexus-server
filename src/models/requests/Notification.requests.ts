@@ -16,6 +16,18 @@ export interface GetAllNotificationsReqQuery extends PaginationReqQuery {
     tag?: NotificationTag
 }
 
-export interface ReadNotificationReqParams extends ParamsDictionary {
+export interface UpdateNotificationReqParams extends ParamsDictionary {
+    notification_id: string
+}
+
+export interface UpdateNotificationReqBody {
+    is_read: boolean
+}
+
+export interface UpdateAllNotificationReqBody {
+    is_read: boolean
+}
+
+export interface DeleteNotificationReqParams extends ParamsDictionary {
     notification_id: string
 }

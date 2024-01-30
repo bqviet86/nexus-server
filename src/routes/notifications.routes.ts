@@ -1,13 +1,19 @@
 import { Router } from 'express'
 
 import {
+    deleteNotificationController,
     getAllNotificationsController,
     getUnreadNotificationsController,
-    readAllNotificationsController,
-    readNotificationController
+    updateAllNotificationController,
+    updateNotificationController
 } from '~/controllers/notifications.controllers'
 import { paginationValidator } from '~/middlewares/common.middlewares'
-import { getAllNotificationsValidator, readNotificationValidator } from '~/middlewares/notifications.middlewares'
+import {
+    deleteNotificationValidator,
+    getAllNotificationsValidator,
+    updateAllNotificationValidator,
+    updateNotificationValidator
+} from '~/middlewares/notifications.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
@@ -40,19 +46,47 @@ notificationsRouter.get(
  */
 notificationsRouter.get('/unread', accessTokenValidator, wrapRequestHandler(getUnreadNotificationsController))
 
+/**
+ * Description: Update notification
+ * Path: /:notification_id
+ * Method: PATCH
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { notification_id: string }
+ * Body: { is_read: boolean }
+ */
 notificationsRouter.patch(
-    '/read/:notification_id',
+    '/:notification_id',
     accessTokenValidator,
-    readNotificationValidator,
-    wrapRequestHandler(readNotificationController)
+    updateNotificationValidator,
+    wrapRequestHandler(updateNotificationController)
 )
 
 /**
- * Description: Read all notifications
- * Path: /read-all
+ * Description: Update all notifications
+ * Path: /
  * Method: PATCH
  * Header: { Authorization: Bearer <access_token> }
+ * Body: { is_read: boolean }
  */
-notificationsRouter.patch('/read-all', accessTokenValidator, wrapRequestHandler(readAllNotificationsController))
+notificationsRouter.patch(
+    '/',
+    accessTokenValidator,
+    updateAllNotificationValidator,
+    wrapRequestHandler(updateAllNotificationController)
+)
+
+/**
+ * Description: Delete notification
+ * Path: /:notification_id
+ * Method: DELETE
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { notification_id: string }
+ */
+notificationsRouter.delete(
+    '/:notification_id',
+    accessTokenValidator,
+    deleteNotificationValidator,
+    wrapRequestHandler(deleteNotificationController)
+)
 
 export default notificationsRouter

@@ -1,10 +1,10 @@
 import { Request } from 'express'
 import path from 'path'
 import fsPromise from 'fs/promises'
-import { Document, ObjectId } from 'mongodb'
+import { Document, ObjectId, WithId } from 'mongodb'
 import { config } from 'dotenv'
 
-import { FriendStatus, TokenTypes, UserRole } from '~/constants/enums'
+import { FriendStatus, NotificationFriendAction, NotificationType, TokenTypes, UserRole } from '~/constants/enums'
 import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
@@ -13,6 +13,7 @@ import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import Friend from '~/models/schemas/Friend.schema'
 import databaseService from './database.services'
 import mediaService from './medias.services'
+import notificationService from './notifications.services'
 import { hashPassword } from '~/utils/crypto'
 import { signToken, verifyToken } from '~/utils/jwt'
 import { io, socketUsers } from '~/utils/socket'
@@ -335,20 +336,21 @@ class UserService {
                 user_to_id: new ObjectId(user_to_id)
             })
         )
-        const [friend] = await databaseService.friends
-            .aggregate<Friend>([
-                {
-                    $match: {
-                        _id: result.insertedId
-                    }
-                },
-                ...this.commonAggregateFriends
-            ])
-            .toArray()
-
-        socketUsers[user_to_id].socket_ids.forEach((socket_id) => {
-            io.to(socket_id).emit('new_friend_request', friend)
+        const notification = await notificationService.createNotification({
+            user_from_id,
+            user_to_id,
+            type: NotificationType.Friend,
+            action: NotificationFriendAction.SendFriendRequest,
+            payload: {
+                friend_id: result.insertedId
+            }
         })
+
+        if (socketUsers[user_to_id]) {
+            socketUsers[user_to_id].socket_ids.forEach((socket_id) => {
+                io.to(socket_id).emit(NotificationFriendAction.SendFriendRequest, notification)
+            })
+        }
 
         return { message: USERS_MESSAGES.SEND_FRIEND_REQUEST_SUCCESS }
     }
@@ -362,30 +364,40 @@ class UserService {
         user_to_id: string
         status: FriendStatus
     }) {
-        // Aggregate cập nhật trạng thái lời mời kết bạn
-        const [friend] = await databaseService.friends
-            .aggregate<Friend>([
-                {
-                    $match: {
-                        user_from_id: new ObjectId(user_from_id),
-                        user_to_id: new ObjectId(user_to_id)
-                    }
+        const friend = (await databaseService.friends.findOneAndUpdate(
+            {
+                user_from_id: new ObjectId(user_from_id),
+                user_to_id: new ObjectId(user_to_id)
+            },
+            {
+                $set: {
+                    status
                 },
-                {
-                    $set: {
-                        status,
-                        updated_at: new Date()
-                    }
-                },
-                ...this.commonAggregateFriends
-            ])
-            .toArray()
+                $currentDate: {
+                    updated_at: true
+                }
+            }
+        )) as WithId<Friend>
 
-        socketUsers[user_from_id].socket_ids.forEach((socket_id) => {
-            io.to(socket_id).emit(`${status === FriendStatus.Accepted ? 'accept' : 'decline'}_friend_request`)
-        })
+        if (status === FriendStatus.Accepted) {
+            const notification = await notificationService.createNotification({
+                user_from_id: user_to_id,
+                user_to_id: user_from_id,
+                type: NotificationType.Friend,
+                action: NotificationFriendAction.AcceptFriendRequest,
+                payload: {
+                    friend_id: friend._id
+                }
+            })
 
-        return { message: USERS_MESSAGES.SEND_FRIEND_REQUEST_SUCCESS }
+            if (socketUsers[user_from_id]) {
+                socketUsers[user_from_id].socket_ids.forEach((socket_id) => {
+                    io.to(socket_id).emit(NotificationFriendAction.AcceptFriendRequest, notification)
+                })
+            }
+        }
+
+        return { message: USERS_MESSAGES.RESPONSE_FRIEND_REQUEST_SUCCESS }
     }
 }
 

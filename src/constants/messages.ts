@@ -54,7 +54,8 @@ export const USERS_MESSAGES = {
     UPDATE_AVATAR_SUCCESS: 'Cập nhật ảnh đại diện thành công',
     UPDATE_ME_SUCCESS: 'Cập nhật thông tin người dùng thành công',
     CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công',
-    SEND_FRIEND_REQUEST_SUCCESS: 'Gửi lời mời kết bạn thành công'
+    SEND_FRIEND_REQUEST_SUCCESS: 'Gửi lời mời kết bạn thành công',
+    RESPONSE_FRIEND_REQUEST_SUCCESS: 'Phản hồi lời mời kết bạn thành công'
 }
 
 export const MEDIAS_MESSAGES = {
@@ -90,9 +91,11 @@ export const NOTIFICATIONS_MESSAGES = {
     INVALID_TAG_VALUE: 'Giá trị tag không hợp lệ',
     INVALID_NOTIFICATION_ID: 'ID thông báo không hợp lệ',
     NOTIFICATION_NOT_FOUND: 'Không tìm thấy thông báo',
+    INVALID_IS_READ_VALUE: 'Giá trị is_read không hợp lệ',
 
     GET_ALL_NOTIFICATIONS_SUCCESSFULLY: 'Lấy tất cả thông báo thành công',
     GET_UNREAD_NOTIFICATIONS_SUCCESSFULLY: 'Lấy tất cả thông báo chưa đọc thành công',
-    READ_NOTIFICATION_SUCCESSFULLY: 'Đọc thông báo thành công',
-    READ_ALL_NOTIFICATIONS_SUCCESSFULLY: 'Đọc tất cả thông báo thành công'
+    UPDATE_NOTIFICATION_SUCCESSFULLY: 'Cập nhật thông báo thành công',
+    UPDATE_ALL_NOTIFICATIONS_SUCCESSFULLY: 'Cập nhật tất cả thông báo thành công',
+    DELETE_NOTIFICATION_SUCCESSFULLY: 'Xóa thông báo thành công'
 }

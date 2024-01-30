@@ -254,7 +254,15 @@ class NotificationService {
         }
     }
 
-    async readNotification({ notification_id, user_id }: { notification_id: string; user_id: string }) {
+    async updateNotification({
+        notification_id,
+        user_id,
+        is_read
+    }: {
+        notification_id: string
+        user_id: string
+        is_read: boolean
+    }) {
         await databaseService.notifications.updateOne(
             {
                 _id: new ObjectId(notification_id),
@@ -262,7 +270,7 @@ class NotificationService {
             },
             {
                 $set: {
-                    is_read: true
+                    is_read
                 },
                 $currentDate: {
                     updated_at: true
@@ -270,18 +278,17 @@ class NotificationService {
             }
         )
 
-        return { message: NOTIFICATIONS_MESSAGES.READ_NOTIFICATION_SUCCESSFULLY }
+        return { message: NOTIFICATIONS_MESSAGES.UPDATE_NOTIFICATION_SUCCESSFULLY }
     }
 
-    async readAllNotifications(user_id: string) {
+    async updateAllNotification({ user_id, is_read }: { user_id: string; is_read: boolean }) {
         await databaseService.notifications.updateMany(
             {
-                user_to_id: new ObjectId(user_id),
-                is_read: false
+                user_to_id: new ObjectId(user_id)
             },
             {
                 $set: {
-                    is_read: true
+                    is_read
                 },
                 $currentDate: {
                     updated_at: true
@@ -289,7 +296,16 @@ class NotificationService {
             }
         )
 
-        return { message: NOTIFICATIONS_MESSAGES.READ_ALL_NOTIFICATIONS_SUCCESSFULLY }
+        return { message: NOTIFICATIONS_MESSAGES.UPDATE_ALL_NOTIFICATIONS_SUCCESSFULLY }
+    }
+
+    async deleteNotification({ notification_id, user_id }: { notification_id: string; user_id: string }) {
+        await databaseService.notifications.deleteOne({
+            _id: new ObjectId(notification_id),
+            user_to_id: new ObjectId(user_id)
+        })
+
+        return { message: NOTIFICATIONS_MESSAGES.DELETE_NOTIFICATION_SUCCESSFULLY }
     }
 }
 

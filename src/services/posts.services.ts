@@ -6,7 +6,6 @@ import { CreatePostReqBody } from '~/models/requests/Post.requests'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import Post from '~/models/schemas/Post.schema'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
-import Notification from '~/models/schemas/Notification.schema'
 import mediaService from './medias.services'
 import notificationService from './notifications.services'
 import databaseService from './database.services'
@@ -57,6 +56,7 @@ class PostService {
                     })
                 )
                 console.log('videosStatus', videosStatus)
+
                 const isAllVideoReady = (videosStatus as WithId<VideoStatus>[]).every(
                     (videoStatus) => videoStatus.status === VideoEncodingStatus.Success
                 )
@@ -72,9 +72,11 @@ class PostService {
                         }
                     })
 
-                    socketUsers[user_id].socket_ids.forEach((socket_id) => {
-                        io.to(socket_id).emit('handle_post_success', notification)
-                    })
+                    if (socketUsers[user_id]) {
+                        socketUsers[user_id].socket_ids.forEach((socket_id) => {
+                            io.to(socket_id).emit(NotificationPostAction.HandlePostSuccess, notification)
+                        })
+                    }
 
                     clearInterval(intervalId)
                 }

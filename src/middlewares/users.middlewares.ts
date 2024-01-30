@@ -390,7 +390,7 @@ export const responseFriendRequestValidator = validate(
             user_from_id: userIdSchema,
             status: {
                 isIn: {
-                    options: [friendStatusValues],
+                    options: [friendStatusValues.filter((status) => status !== FriendStatus.Pending)],
                     errorMessage: USERS_MESSAGES.FRIEND_STATUS_IS_INVALID
                 }
             }
