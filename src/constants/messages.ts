@@ -54,6 +54,7 @@ export const USERS_MESSAGES = {
     UPDATE_AVATAR_SUCCESS: 'Cập nhật ảnh đại diện thành công',
     UPDATE_ME_SUCCESS: 'Cập nhật thông tin người dùng thành công',
     CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công',
+    GET_ALL_FRIEND_REQUESTS_SUCCESS: 'Lấy tất cả lời mời kết bạn thành công',
     SEND_FRIEND_REQUEST_SUCCESS: 'Gửi lời mời kết bạn thành công',
     RESPONSE_FRIEND_REQUEST_SUCCESS: 'Phản hồi lời mời kết bạn thành công'
 }

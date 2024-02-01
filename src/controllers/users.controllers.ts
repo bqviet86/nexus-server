@@ -124,6 +124,16 @@ export const responseFriendRequestController = async (
     return res.json(result)
 }
 
+export const getAllFriendRequestsController = async (req: Request, res: Response) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const result = await usersService.getAllFriendRequests(user_id)
+
+    return res.json({
+        message: USERS_MESSAGES.GET_ALL_FRIEND_REQUESTS_SUCCESS,
+        result
+    })
+}
+
 export const loginAdminController = async (req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) => {
     const { _id, role } = req.user as User
 

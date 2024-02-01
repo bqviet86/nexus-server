@@ -399,6 +399,27 @@ class UserService {
 
         return { message: USERS_MESSAGES.RESPONSE_FRIEND_REQUEST_SUCCESS }
     }
+
+    async getAllFriendRequests(user_id: string) {
+        const friends = await databaseService.friends
+            .aggregate<Friend>([
+                {
+                    $match: {
+                        user_to_id: new ObjectId(user_id),
+                        status: FriendStatus.Pending
+                    }
+                },
+                ...this.commonAggregateFriends,
+                {
+                    $sort: {
+                        created_at: -1
+                    }
+                }
+            ])
+            .toArray()
+
+        return friends
+    }
 }
 
 const userService = new UserService()
