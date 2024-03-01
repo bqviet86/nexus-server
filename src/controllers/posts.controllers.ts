@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 
 import { POSTS_MESSAGES } from '~/constants/messages'
+import { PaginationReqQuery } from '~/models/requests/Common.requests'
 import { CreatePostReqBody, DeletePostReqParams, GetPostReqParams } from '~/models/requests/Post.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
 import Post from '~/models/schemas/Post.schema'
@@ -23,6 +24,26 @@ export const getPostController = async (req: Request<GetPostReqParams>, res: Res
     return res.json({
         message: POSTS_MESSAGES.GET_POST_SUCCESSFULLY,
         result: post
+    })
+}
+
+export const getNewsFeedController = async (
+    req: Request<ParamsDictionary, any, any, PaginationReqQuery>,
+    res: Response
+) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const page = Number(req.query.page)
+    const limit = Number(req.query.limit)
+    const { posts, total_posts } = await postService.getNewsFeed({ user_id, limit })
+
+    return res.json({
+        message: POSTS_MESSAGES.GET_NEWS_FEED_SUCCESSFULLY,
+        result: {
+            posts,
+            page,
+            limit,
+            total_pages: Math.ceil(total_posts / limit)
+        }
     })
 }
 

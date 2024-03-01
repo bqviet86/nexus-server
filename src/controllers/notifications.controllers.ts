@@ -33,7 +33,7 @@ export const getAllNotificationsController = async (
             notifications,
             page,
             limit,
-            total_pages: Math.ceil(total_notifications / Number(limit))
+            total_pages: Math.ceil(total_notifications / limit)
         }
     })
 }

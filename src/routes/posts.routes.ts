@@ -1,6 +1,12 @@
 import { Router } from 'express'
 
-import { createPostController, deletePostController, getPostController } from '~/controllers/posts.controllers'
+import {
+    createPostController,
+    deletePostController,
+    getNewsFeedController,
+    getPostController
+} from '~/controllers/posts.controllers'
+import { paginationValidator } from '~/middlewares/common.middlewares'
 import {
     createPostValidator,
     deletePostValidator,
@@ -26,6 +32,15 @@ postsRouter.post(
     toLowerCaseHashTags,
     wrapRequestHandler(createPostController)
 )
+
+/**
+ * Description: Get news feed
+ * Path: /news-feed
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Query: { page: number, limit: number }
+ */
+postsRouter.get('/news-feed', accessTokenValidator, paginationValidator, wrapRequestHandler(getNewsFeedController))
 
 /**
  * Description: Get a post

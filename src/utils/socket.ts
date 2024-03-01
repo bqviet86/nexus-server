@@ -7,6 +7,7 @@ import { verifyAccessToken } from './commons'
 
 type UserSocket = {
     socket_ids: string[]
+    previous_post_ids: string[]
 }
 
 export let io: Server
@@ -45,7 +46,10 @@ const initSocket = (httpServer: ServerHttp) => {
         if (socketUsers[user_id]) {
             socketUsers[user_id].socket_ids.push(socketId)
         } else {
-            socketUsers[user_id] = { socket_ids: [socketId] }
+            socketUsers[user_id] = {
+                socket_ids: [socketId],
+                previous_post_ids: []
+            }
         }
 
         console.log('socketUsers', socketUsers)

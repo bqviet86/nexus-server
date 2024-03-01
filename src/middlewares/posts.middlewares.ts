@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { checkSchema } from 'express-validator'
-import { Request as RequestValidator } from 'express-validator/src/base'
 import { ObjectId } from 'mongodb'
 import { isArray, isEmpty } from 'lodash'
 
@@ -13,168 +12,12 @@ import { CreatePostReqBody } from '~/models/requests/Post.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
 import Post from '~/models/schemas/Post.schema'
 import databaseService from '~/services/database.services'
+import postService from '~/services/posts.services'
 import { isMedia } from '~/utils/check'
 import { stringEnumToArray } from '~/utils/commons'
 import { validate } from '~/utils/validation'
 
 const postTypeValues = stringEnumToArray(PostType)
-
-const postIdCustomFunc = async ({
-    value,
-    req,
-    isDeletePost = false
-}: {
-    value: any
-    req: RequestValidator
-    isDeletePost?: boolean
-}) => {
-    if (!ObjectId.isValid(value)) {
-        throw new ErrorWithStatus({
-            message: POSTS_MESSAGES.INVALID_POST_ID,
-            status: HTTP_STATUS.BAD_REQUEST
-        })
-    }
-
-    const [result] = await databaseService.posts
-        .aggregate<{ post: Post }>([
-            {
-                $match: {
-                    _id: new ObjectId(value)
-                }
-            },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'user_id',
-                    foreignField: '_id',
-                    as: 'user'
-                }
-            },
-            {
-                $unwind: {
-                    path: '$user'
-                }
-            },
-            {
-                $lookup: {
-                    from: 'hashtags',
-                    localField: 'hashtags',
-                    foreignField: '_id',
-                    as: 'hashtags'
-                }
-            },
-            {
-                $facet: {
-                    withParent: [
-                        {
-                            $match: {
-                                parent_id: {
-                                    $ne: null
-                                }
-                            }
-                        },
-                        {
-                            $lookup: {
-                                from: 'posts',
-                                localField: 'parent_id',
-                                foreignField: '_id',
-                                as: 'parent_post'
-                            }
-                        },
-                        {
-                            $unwind: {
-                                path: '$parent_post'
-                            }
-                        },
-                        {
-                            $lookup: {
-                                from: 'users',
-                                localField: 'parent_post.user_id',
-                                foreignField: '_id',
-                                as: 'parent_post.user'
-                            }
-                        },
-                        {
-                            $unwind: {
-                                path: '$parent_post.user'
-                            }
-                        },
-                        {
-                            $lookup: {
-                                from: 'hashtags',
-                                localField: 'parent_post.hashtags',
-                                foreignField: '_id',
-                                as: 'parent_post.hashtags'
-                            }
-                        }
-                    ],
-                    withoutParent: [
-                        {
-                            $match: {
-                                parent_id: null
-                            }
-                        }
-                    ]
-                }
-            },
-            {
-                $project: {
-                    post: {
-                        $concatArrays: ['$withParent', '$withoutParent']
-                    }
-                }
-            },
-            {
-                $unwind: {
-                    path: '$post'
-                }
-            },
-            {
-                $project: {
-                    post: {
-                        user_id: 0,
-                        parent_id: 0,
-                        user: {
-                            password: 0,
-                            role: 0
-                        },
-                        parent_post: {
-                            user_id: 0,
-                            parent_id: 0,
-                            user: {
-                                password: 0,
-                                role: 0
-                            }
-                        }
-                    }
-                }
-            }
-        ])
-        .toArray()
-    const post = result?.post
-
-    if (post === undefined) {
-        throw new ErrorWithStatus({
-            message: POSTS_MESSAGES.POST_NOT_FOUND,
-            status: HTTP_STATUS.NOT_FOUND
-        })
-    }
-
-    ;(req as Request).post = post
-
-    if (isDeletePost) {
-        const { user_id } = req.decoded_authorization as TokenPayload
-
-        if (!((post as any).user._id as ObjectId).equals(user_id)) {
-            throw new ErrorWithStatus({
-                message: POSTS_MESSAGES.CAN_NOT_DELETE_POST_OF_OTHER_USER,
-                status: HTTP_STATUS.FORBIDDEN
-            })
-        }
-    }
-
-    return true
-}
 
 export const createPostValidator = validate(
     checkSchema(
@@ -226,9 +69,16 @@ export const createPostValidator = validate(
                                     status: HTTP_STATUS.NOT_FOUND
                                 })
                             }
+
+                            if (parentPost.type === PostType.Share) {
+                                throw new ErrorWithStatus({
+                                    message: POSTS_MESSAGES.PARENT_POST_NOT_BE_SHARE_POST,
+                                    status: HTTP_STATUS.BAD_REQUEST
+                                })
+                            }
                         }
 
-                        // parent_id chỉ được null khi type là post gốc
+                        // parent_id phải là null nếu type là post gốc
                         if (type === PostType.Post && value !== null) {
                             throw new ErrorWithStatus({
                                 message: POSTS_MESSAGES.PARENT_ID_MUST_BE_NULL,
@@ -297,7 +147,37 @@ export const getPostValidator = validate(
             post_id: {
                 isString: true,
                 custom: {
-                    options: (value, { req }) => postIdCustomFunc({ value, req })
+                    options: async (value, { req }) => {
+                        if (!ObjectId.isValid(value)) {
+                            throw new ErrorWithStatus({
+                                message: POSTS_MESSAGES.INVALID_POST_ID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const [result] = await databaseService.posts
+                            .aggregate<{ post: Post }>([
+                                {
+                                    $match: {
+                                        _id: new ObjectId(value)
+                                    }
+                                },
+                                ...postService.commonAggregatePosts
+                            ])
+                            .toArray()
+                        const post = result?.post
+
+                        if (post === undefined) {
+                            throw new ErrorWithStatus({
+                                message: POSTS_MESSAGES.POST_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        ;(req as Request).post = post
+
+                        return true
+                    }
                 }
             }
         },
@@ -311,7 +191,35 @@ export const deletePostValidator = validate(
             post_id: {
                 isString: true,
                 custom: {
-                    options: (value, { req }) => postIdCustomFunc({ value, req, isDeletePost: true })
+                    options: async (value, { req }) => {
+                        if (!ObjectId.isValid(value)) {
+                            throw new ErrorWithStatus({
+                                message: POSTS_MESSAGES.INVALID_POST_ID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const { user_id } = req.decoded_authorization as TokenPayload
+                        const post = await databaseService.posts.findOne({
+                            _id: new ObjectId(value)
+                        })
+
+                        if (post === null) {
+                            throw new ErrorWithStatus({
+                                message: POSTS_MESSAGES.POST_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        if (post.user_id.toString() !== user_id) {
+                            throw new ErrorWithStatus({
+                                message: POSTS_MESSAGES.NOT_HAVE_PERMISSION_TO_DELETE_POST,
+                                status: HTTP_STATUS.FORBIDDEN
+                            })
+                        }
+
+                        return true
+                    }
                 }
             }
         },

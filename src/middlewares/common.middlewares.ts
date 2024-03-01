@@ -27,9 +27,9 @@ export const paginationValidator = validate(
                 },
                 custom: {
                     options: async (value: number) => {
-                        const num = Number(value)
+                        const page = Number(value)
 
-                        if (num < 1) {
+                        if (page < 1) {
                             throw new Error('page >= 1')
                         }
 
@@ -46,10 +46,10 @@ export const paginationValidator = validate(
                 },
                 custom: {
                     options: async (value: number) => {
-                        const num = Number(value)
+                        const limit = Number(value)
 
-                        if (num > 100 || num < 1) {
-                            throw new Error('1 <= limit <= 100')
+                        if (limit < 5 || limit > 100) {
+                            throw new Error('5 <= limit <= 100')
                         }
 
                         return true

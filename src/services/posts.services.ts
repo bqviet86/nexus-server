@@ -1,4 +1,4 @@
-import { ObjectId, WithId } from 'mongodb'
+import { Document, ObjectId, WithId } from 'mongodb'
 
 import { POSTS_MESSAGES } from '~/constants/messages'
 import { MediaTypes, NotificationPostAction, NotificationType, VideoEncodingStatus } from '~/constants/enums'
@@ -12,6 +12,116 @@ import databaseService from './database.services'
 import { io, socketUsers } from '~/utils/socket'
 
 class PostService {
+    commonAggregatePosts: Document[] = [
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'user_id',
+                foreignField: '_id',
+                as: 'user'
+            }
+        },
+        {
+            $unwind: {
+                path: '$user'
+            }
+        },
+        {
+            $lookup: {
+                from: 'hashtags',
+                localField: 'hashtags',
+                foreignField: '_id',
+                as: 'hashtags'
+            }
+        },
+        {
+            $facet: {
+                withParent: [
+                    {
+                        $match: {
+                            parent_id: {
+                                $ne: null
+                            }
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: 'posts',
+                            localField: 'parent_id',
+                            foreignField: '_id',
+                            as: 'parent_post'
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$parent_post'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: 'parent_post.user_id',
+                            foreignField: '_id',
+                            as: 'parent_post.user'
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$parent_post.user'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: 'hashtags',
+                            localField: 'parent_post.hashtags',
+                            foreignField: '_id',
+                            as: 'parent_post.hashtags'
+                        }
+                    }
+                ],
+                withoutParent: [
+                    {
+                        $match: {
+                            parent_id: null
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $project: {
+                post: {
+                    $concatArrays: ['$withParent', '$withoutParent']
+                }
+            }
+        },
+        {
+            $unwind: {
+                path: '$post'
+            }
+        },
+        {
+            $project: {
+                post: {
+                    user_id: 0,
+                    parent_id: 0,
+                    user: {
+                        password: 0,
+                        role: 0
+                    },
+                    parent_post: {
+                        user_id: 0,
+                        parent_id: 0,
+                        user: {
+                            password: 0,
+                            role: 0
+                        }
+                    }
+                }
+            }
+        }
+    ]
+
     async checkAndCreateHashtag(hashtags: string[]) {
         const hashtagDocuments = await Promise.all(
             hashtags.map((hashtag) =>
@@ -84,6 +194,86 @@ class PostService {
         }
 
         return post
+    }
+
+    async getNewsFeed({ user_id, limit }: { user_id: string; limit: number }) {
+        const previousPostIds = socketUsers[user_id].previous_post_ids.map((id) => new ObjectId(id))
+        const [friends, total_posts] = await Promise.all([
+            databaseService.friends
+                .find({
+                    $or: [
+                        {
+                            user_from_id: new ObjectId(user_id)
+                        },
+                        {
+                            user_to_id: new ObjectId(user_id)
+                        }
+                    ]
+                })
+                .toArray(),
+            databaseService.posts.countDocuments({
+                user_id: {
+                    $nin: [new ObjectId(user_id)]
+                }
+            })
+        ])
+        const friendIds = friends.map(({ user_from_id, user_to_id }) =>
+            user_from_id.toString() === user_id ? user_to_id : user_from_id
+        )
+
+        const friendPosts = (
+            await databaseService.posts
+                .aggregate<{ post: Post }>([
+                    {
+                        $match: {
+                            _id: {
+                                $nin: previousPostIds
+                            },
+                            user_id: {
+                                $in: friendIds
+                            }
+                        }
+                    },
+                    {
+                        $sample: {
+                            size: Math.round((limit * 20) / 100)
+                        }
+                    },
+                    ...this.commonAggregatePosts
+                ])
+                .toArray()
+        ).map(({ post }) => post)
+        const otherPosts = (
+            await databaseService.posts
+                .aggregate<{ post: Post }>([
+                    {
+                        $match: {
+                            _id: {
+                                $nin: previousPostIds
+                            },
+                            user_id: {
+                                $nin: friendIds.concat(new ObjectId(user_id))
+                            }
+                        }
+                    },
+                    {
+                        $sample: {
+                            size: limit - friendPosts.length
+                        }
+                    },
+                    ...this.commonAggregatePosts
+                ])
+                .toArray()
+        ).map(({ post }) => post)
+        const posts = friendPosts
+            .concat(otherPosts)
+            .sort((a, b) => new Date(b.created_at as Date).getTime() - new Date(a.created_at as Date).getTime())
+
+        socketUsers[user_id].previous_post_ids = socketUsers[user_id].previous_post_ids.concat(
+            posts.map(({ _id }) => (_id as ObjectId).toString())
+        )
+
+        return { posts, total_posts }
     }
 
     async deletePost(post_id: string, user_id: string) {

@@ -76,15 +76,17 @@ export const POSTS_MESSAGES = {
     CONTENT_MUST_NOT_BE_EMPTY: 'Nội dung không được để trống',
     INVALID_PARENT_ID: 'ID post cha không hợp lệ',
     PARENT_POST_NOT_FOUND: 'Không tìm thấy post cha',
+    PARENT_POST_NOT_BE_SHARE_POST: 'Post cha không được là post share',
     PARENT_ID_MUST_BE_NULL: 'ID post cha phải là null',
     HASHTAGS_MUST_BE_AN_ARRAY_OF_STRING: 'Hashtags phải là một mảng các chuỗi',
     MEDIAS_MUST_BE_AN_ARRAY_OF_MEDIA_OBJECT: 'Medias phải là một mảng các Media object',
     INVALID_POST_ID: 'ID post không hợp lệ',
     POST_NOT_FOUND: 'Không tìm thấy post',
-    CAN_NOT_DELETE_POST_OF_OTHER_USER: 'Không thể xóa post của người dùng khác',
+    NOT_HAVE_PERMISSION_TO_DELETE_POST: 'Bạn không có quyền xóa post này',
 
     CREATE_POST_SUCCESSFULLY: 'Tạo post thành công',
     GET_POST_SUCCESSFULLY: 'Lấy post thành công',
+    GET_NEWS_FEED_SUCCESSFULLY: 'Lấy news feed thành công',
     DELETE_POST_SUCCESSFULLY: 'Xóa post thành công'
 }
 
