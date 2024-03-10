@@ -9,6 +9,7 @@ import usersRouter from '~/routes/users.routes'
 import mediasRouter from './routes/medias.routes'
 import postsRouter from './routes/posts.routes'
 import notificationsRouter from './routes/notifications.routes'
+import commentsRouter from './routes/comments.routes'
 import staticRouter from './routes/static.routes'
 import databaseService from '~/services/database.services'
 import { initFolder } from './utils/file'
@@ -41,6 +42,7 @@ app.use('/users', usersRouter)
 app.use('/medias', mediasRouter)
 app.use('/posts', postsRouter)
 app.use('/notifications', notificationsRouter)
+app.use('/comments', commentsRouter)
 app.use('/static', staticRouter)
 
 // Error handler

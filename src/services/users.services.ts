@@ -51,12 +51,10 @@ class UserService {
         {
             $project: {
                 user_from: {
-                    password: 0,
-                    role: 0
+                    password: 0
                 },
                 user_to: {
-                    password: 0,
-                    role: 0
+                    password: 0
                 }
             }
         }
@@ -155,8 +153,7 @@ class UserService {
             { _id: insertUserResult.insertedId },
             {
                 projection: {
-                    password: 0,
-                    role: 0
+                    password: 0
                 }
             }
         )
@@ -176,8 +173,7 @@ class UserService {
                 { _id: new ObjectId(user_id) },
                 {
                     projection: {
-                        password: 0,
-                        role: 0
+                        password: 0
                     }
                 }
             ),
@@ -241,8 +237,7 @@ class UserService {
             { _id: new ObjectId(user_id) },
             {
                 projection: {
-                    password: 0,
-                    role: 0
+                    password: 0
                 }
             }
         )
@@ -304,8 +299,7 @@ class UserService {
                 returnDocument: 'after',
                 includeResultMetadata: false,
                 projection: {
-                    password: 0,
-                    role: 0
+                    password: 0
                 }
             }
         )

@@ -106,15 +106,13 @@ class PostService {
                     user_id: 0,
                     parent_id: 0,
                     user: {
-                        password: 0,
-                        role: 0
+                        password: 0
                     },
                     parent_post: {
                         user_id: 0,
                         parent_id: 0,
                         user: {
-                            password: 0,
-                            role: 0
+                            password: 0
                         }
                     }
                 }

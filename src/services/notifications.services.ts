@@ -138,12 +138,10 @@ class NotificationService {
                     user_from_id: 0,
                     user_to_id: 0,
                     user_from: {
-                        password: 0,
-                        role: 0
+                        password: 0
                     },
                     user_to: {
-                        password: 0,
-                        role: 0
+                        password: 0
                     },
                     payload: {
                         post_id: 0,

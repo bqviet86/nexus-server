@@ -102,3 +102,17 @@ export const NOTIFICATIONS_MESSAGES = {
     UPDATE_ALL_NOTIFICATIONS_SUCCESSFULLY: 'Cập nhật tất cả thông báo thành công',
     DELETE_NOTIFICATION_SUCCESSFULLY: 'Xóa thông báo thành công'
 }
+
+export const COMMENTS_MESSAGES = {
+    INVALID_POST_ID: 'ID post không hợp lệ',
+    POST_NOT_FOUND: 'Không tìm thấy post',
+    INVALID_COMMENT_ID: 'ID comment không hợp lệ',
+    COMMENT_NOT_FOUND: 'Không tìm thấy comment',
+    CONTENT_MUST_BE_A_STRING: 'Nội dung comment phải là một chuỗi',
+    MEDIA_MUST_BE_A_MEDIA_OBJECT_OR_NULL: 'Media phải là một Media object hoặc null',
+
+    GET_COMMENTS_OF_POST_SUCCESSFULLY: 'Lấy tất cả comment của post thành công',
+    GET_REPLIES_OF_COMMENT_SUCCESSFULLY: 'Lấy tất cả reply của comment thành công',
+    UPDATE_COMMENT_SUCCESSFULLY: 'Cập nhật comment thành công',
+    DELETE_COMMENT_SUCCESSFULLY: 'Xóa comment thành công'
+}

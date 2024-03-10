@@ -109,7 +109,7 @@ export const createPostValidator = validate(
             medias: {
                 isArray: true,
                 custom: {
-                    options: (value: string[]) => {
+                    options: (value: any[]) => {
                         // medias phải là mảng các Media
                         if (value.some((media) => !isMedia(media))) {
                             throw new ErrorWithStatus({

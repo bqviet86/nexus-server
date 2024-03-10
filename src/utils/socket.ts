@@ -3,6 +3,8 @@ import { Server } from 'socket.io'
 import { ExtendedError } from 'socket.io/dist/namespace'
 
 import { TokenPayload } from '~/models/requests/User.requests'
+import Comment from '~/models/schemas/Comment.schema'
+import commentService from '~/services/comments.services'
 import { verifyAccessToken } from './commons'
 
 type UserSocket = {
@@ -81,6 +83,25 @@ const initSocket = (httpServer: ServerHttp) => {
 
             console.log('socketUsers', socketUsers)
         })
+
+        socket.on(
+            'create_comment',
+            async (data: Pick<Comment, 'content' | 'media'> & { post_id: string; parent_id: string | null }) => {
+                const { user_id } = socket.handshake.auth.decoded_authorization as TokenPayload
+                const comment = await commentService.createComment({
+                    ...data,
+                    user_id
+                })
+
+                setTimeout(() => {
+                    Object.keys(socketUsers).forEach((userId) => {
+                        socketUsers[userId].socket_ids.forEach((socket_id) =>
+                            io.to(socket_id).emit('receive_comment', comment)
+                        )
+                    })
+                }, 1000)
+            }
+        )
     })
 }
 
