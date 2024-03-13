@@ -48,7 +48,7 @@ postsRouter.get('/news-feed', accessTokenValidator, paginationValidator, wrapReq
  * Method: GET
  * Params: { post_id: string }
  */
-postsRouter.get('/:post_id', getPostValidator, wrapRequestHandler(getPostController))
+postsRouter.get('/:post_id', accessTokenValidator, getPostValidator, wrapRequestHandler(getPostController))
 
 /**
  * Description: Delete a post

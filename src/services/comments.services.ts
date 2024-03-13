@@ -1,9 +1,11 @@
 import { Document, ObjectId } from 'mongodb'
 
-import Comment from '~/models/schemas/Comment.schema'
-import databaseService from './database.services'
-import { UpdateCommentReqBody } from '~/models/requests/Comment.requests'
 import { COMMENTS_MESSAGES } from '~/constants/messages'
+import Comment from '~/models/schemas/Comment.schema'
+import { UpdateCommentReqBody } from '~/models/requests/Comment.requests'
+import databaseService from './database.services'
+import { io, socketUsers } from '~/utils/socket'
+import { delayExecution } from '~/utils/handlers'
 
 class CommentService {
     private commonAggregateComments: Document[] = [
@@ -138,9 +140,22 @@ class CommentService {
     }
 
     async deleteComment(comment_id: string) {
-        await databaseService.comments.deleteOne({
-            _id: new ObjectId(comment_id)
-        })
+        const [comment, { deletedCount }] = await Promise.all([
+            databaseService.comments.findOneAndDelete({
+                _id: new ObjectId(comment_id)
+            }),
+            databaseService.comments.deleteMany({
+                parent_id: new ObjectId(comment_id)
+            })
+        ])
+
+        await delayExecution(() => {
+            Object.keys(socketUsers).forEach((userId) => {
+                socketUsers[userId].socket_ids.forEach((socket_id) => {
+                    io.to(socket_id).emit('delete_comment', { comment, delete_count: deletedCount + 1 })
+                })
+            })
+        }, 300)
 
         return { message: COMMENTS_MESSAGES.DELETE_COMMENT_SUCCESSFULLY }
     }

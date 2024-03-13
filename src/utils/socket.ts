@@ -1,11 +1,17 @@
 import { Server as ServerHttp } from 'http'
 import { Server } from 'socket.io'
 import { ExtendedError } from 'socket.io/dist/namespace'
+import { ObjectId } from 'mongodb'
 
+import { NotificationPostAction, NotificationType } from '~/constants/enums'
 import { TokenPayload } from '~/models/requests/User.requests'
 import Comment from '~/models/schemas/Comment.schema'
+import Post from '~/models/schemas/Post.schema'
 import commentService from '~/services/comments.services'
+import notificationService from '~/services/notifications.services'
+import databaseService from '~/services/database.services'
 import { verifyAccessToken } from './commons'
+import { delayExecution } from './handlers'
 
 type UserSocket = {
     socket_ids: string[]
@@ -88,18 +94,33 @@ const initSocket = (httpServer: ServerHttp) => {
             'create_comment',
             async (data: Pick<Comment, 'content' | 'media'> & { post_id: string; parent_id: string | null }) => {
                 const { user_id } = socket.handshake.auth.decoded_authorization as TokenPayload
-                const comment = await commentService.createComment({
-                    ...data,
-                    user_id
+
+                const [comment, post] = await Promise.all([
+                    commentService.createComment({
+                        ...data,
+                        user_id
+                    }),
+                    databaseService.posts.findOne({
+                        _id: new ObjectId(data.post_id)
+                    })
+                ])
+                const notification = await notificationService.createNotification({
+                    user_from_id: user_id,
+                    user_to_id: (post as Post).user_id.toString(),
+                    type: NotificationType.Post,
+                    action: NotificationPostAction.CommentPost,
+                    payload: {
+                        post_id: (post as Post)._id
+                    }
                 })
 
-                setTimeout(() => {
+                await delayExecution(() => {
                     Object.keys(socketUsers).forEach((userId) => {
                         socketUsers[userId].socket_ids.forEach((socket_id) =>
-                            io.to(socket_id).emit('receive_comment', comment)
+                            io.to(socket_id).emit(NotificationPostAction.CommentPost, { notification, comment })
                         )
                     })
-                }, 1000)
+                }, 300)
             }
         )
     })

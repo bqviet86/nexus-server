@@ -1,3 +1,8 @@
+export const COMMON_MESSAGES = {
+    INVALID_POST_ID: 'ID post không hợp lệ',
+    POST_NOT_FOUND: 'Không tìm thấy post'
+}
+
 export const USERS_MESSAGES = {
     VALIDATION_ERROR: 'Bạn cung cấp dữ liệu chưa hợp lệ',
     NAME_IS_REQUIRED: 'Tên không được để trống',
@@ -80,6 +85,7 @@ export const POSTS_MESSAGES = {
     PARENT_ID_MUST_BE_NULL: 'ID post cha phải là null',
     HASHTAGS_MUST_BE_AN_ARRAY_OF_STRING: 'Hashtags phải là một mảng các chuỗi',
     MEDIAS_MUST_BE_AN_ARRAY_OF_MEDIA_OBJECT: 'Medias phải là một mảng các Media object',
+    MEDIAS_MUST_BE_EMPTY: 'Medias phải là mảng rỗng',
     INVALID_POST_ID: 'ID post không hợp lệ',
     POST_NOT_FOUND: 'Không tìm thấy post',
     NOT_HAVE_PERMISSION_TO_DELETE_POST: 'Bạn không có quyền xóa post này',
@@ -104,8 +110,6 @@ export const NOTIFICATIONS_MESSAGES = {
 }
 
 export const COMMENTS_MESSAGES = {
-    INVALID_POST_ID: 'ID post không hợp lệ',
-    POST_NOT_FOUND: 'Không tìm thấy post',
     INVALID_COMMENT_ID: 'ID comment không hợp lệ',
     COMMENT_NOT_FOUND: 'Không tìm thấy comment',
     CONTENT_MUST_BE_A_STRING: 'Nội dung comment phải là một chuỗi',
@@ -115,4 +119,9 @@ export const COMMENTS_MESSAGES = {
     GET_REPLIES_OF_COMMENT_SUCCESSFULLY: 'Lấy tất cả reply của comment thành công',
     UPDATE_COMMENT_SUCCESSFULLY: 'Cập nhật comment thành công',
     DELETE_COMMENT_SUCCESSFULLY: 'Xóa comment thành công'
+}
+
+export const LIKES_MESSAGES = {
+    LIKE_POST_SUCCESSFULLY: 'Like post thành công',
+    UNLIKE_POST_SUCCESSFULLY: 'Unlike post thành công'
 }

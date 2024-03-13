@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb'
 
 import HTTP_STATUS from '~/constants/httpStatus'
 import { COMMENTS_MESSAGES } from '~/constants/messages'
+import { postIdSchema } from './common.middlewares'
 import { ErrorWithStatus } from '~/models/Errors'
 import { TokenPayload } from '~/models/requests/User.requests'
 import databaseService from '~/services/database.services'
@@ -37,32 +38,7 @@ const commentIdCustomFunction = async (value: string, { req }: { req: Request })
 export const getCommentsOfPostValidator = validate(
     checkSchema(
         {
-            post_id: {
-                trim: true,
-                custom: {
-                    options: async (value: string) => {
-                        if (!ObjectId.isValid(value)) {
-                            throw new ErrorWithStatus({
-                                message: COMMENTS_MESSAGES.INVALID_POST_ID,
-                                status: HTTP_STATUS.BAD_REQUEST
-                            })
-                        }
-
-                        const post = await databaseService.posts.findOne({
-                            _id: new ObjectId(value)
-                        })
-
-                        if (post === null) {
-                            throw new ErrorWithStatus({
-                                message: COMMENTS_MESSAGES.POST_NOT_FOUND,
-                                status: HTTP_STATUS.NOT_FOUND
-                            })
-                        }
-
-                        return true
-                    }
-                }
-            }
+            post_id: postIdSchema
         },
         ['params']
     )

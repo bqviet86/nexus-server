@@ -10,5 +10,6 @@ declare module 'express' {
         decoded_authorization?: TokenPayload
         decoded_refresh_token?: TokenPayload
         post?: Post
+        parent_post?: Post
     }
 }

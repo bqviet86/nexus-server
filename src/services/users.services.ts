@@ -17,6 +17,7 @@ import notificationService from './notifications.services'
 import { hashPassword } from '~/utils/crypto'
 import { signToken, verifyToken } from '~/utils/jwt'
 import { io, socketUsers } from '~/utils/socket'
+import { delayExecution } from '~/utils/handlers'
 
 config()
 
@@ -340,11 +341,13 @@ class UserService {
             }
         })
 
-        if (socketUsers[user_to_id]) {
-            socketUsers[user_to_id].socket_ids.forEach((socket_id) => {
-                io.to(socket_id).emit(NotificationFriendAction.SendFriendRequest, notification)
-            })
-        }
+        await delayExecution(() => {
+            if (socketUsers[user_to_id]) {
+                socketUsers[user_to_id].socket_ids.forEach((socket_id) => {
+                    io.to(socket_id).emit(NotificationFriendAction.SendFriendRequest, { notification })
+                })
+            }
+        }, 300)
 
         return { message: USERS_MESSAGES.SEND_FRIEND_REQUEST_SUCCESS }
     }
@@ -384,11 +387,13 @@ class UserService {
                 }
             })
 
-            if (socketUsers[user_from_id]) {
-                socketUsers[user_from_id].socket_ids.forEach((socket_id) => {
-                    io.to(socket_id).emit(NotificationFriendAction.AcceptFriendRequest, notification)
-                })
-            }
+            await delayExecution(() => {
+                if (socketUsers[user_from_id]) {
+                    socketUsers[user_from_id].socket_ids.forEach((socket_id) => {
+                        io.to(socket_id).emit(NotificationFriendAction.AcceptFriendRequest, { notification })
+                    })
+                }
+            }, 300)
         }
 
         return { message: USERS_MESSAGES.RESPONSE_FRIEND_REQUEST_SUCCESS }

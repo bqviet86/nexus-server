@@ -9,6 +9,7 @@ import VideoStatus from '~/models/schemas/VideoStatus.schema'
 import Notification from '~/models/schemas/Notification.schema'
 import Friend from '~/models/schemas/Friend.schema'
 import Comment from '~/models/schemas/Comment.schema'
+import Like from '~/models/schemas/Like.schema'
 
 config()
 
@@ -62,6 +63,10 @@ class DatabaseService {
 
     get comments(): Collection<Comment> {
         return this.db.collection(process.env.DB_COMMENTS_COLLECTION as string)
+    }
+
+    get likes(): Collection<Like> {
+        return this.db.collection(process.env.DB_LIKES_COLLECTION as string)
     }
 }
 

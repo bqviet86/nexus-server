@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from 'express'
-import { checkSchema } from 'express-validator'
+import { ParamSchema, checkSchema } from 'express-validator'
+import { ObjectId } from 'mongodb'
 import { pick } from 'lodash'
 
+import HTTP_STATUS from '~/constants/httpStatus'
+import { COMMON_MESSAGES } from '~/constants/messages'
+import { ErrorWithStatus } from '~/models/Errors'
+import databaseService from '~/services/database.services'
 import { validate } from '~/utils/validation'
 
 type FilterKeys<T> = Array<keyof T>
@@ -14,7 +19,6 @@ export const filterMiddleware =
         next()
     }
 
-// Schemas
 export const paginationValidator = validate(
     checkSchema(
         {
@@ -60,3 +64,33 @@ export const paginationValidator = validate(
         ['query']
     )
 )
+
+// Schemas
+export const postIdSchema: ParamSchema = {
+    trim: true,
+    custom: {
+        options: async (value: string, { req }) => {
+            if (!ObjectId.isValid(value)) {
+                throw new ErrorWithStatus({
+                    message: COMMON_MESSAGES.INVALID_POST_ID,
+                    status: HTTP_STATUS.BAD_REQUEST
+                })
+            }
+
+            const post = await databaseService.posts.findOne({
+                _id: new ObjectId(value)
+            })
+
+            if (post === null) {
+                throw new ErrorWithStatus({
+                    message: COMMON_MESSAGES.POST_NOT_FOUND,
+                    status: HTTP_STATUS.NOT_FOUND
+                })
+            }
+
+            ;(req as Request).post = post
+
+            return true
+        }
+    }
+}

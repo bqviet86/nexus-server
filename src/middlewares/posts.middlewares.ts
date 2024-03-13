@@ -32,10 +32,10 @@ export const createPostValidator = validate(
                 isString: true,
                 custom: {
                     options: (value: string, { req }) => {
-                        const medias = (req.body as CreatePostReqBody).medias
+                        const { medias, type } = req.body as CreatePostReqBody
 
-                        // content không được rỗng nếu không có media
-                        if (isEmpty(value) && isEmpty(medias)) {
+                        // Nếu type là share thì content không được rỗng khi không có media
+                        if (type === PostType.Post && isEmpty(value) && isEmpty(medias)) {
                             throw new ErrorWithStatus({
                                 message: POSTS_MESSAGES.CONTENT_MUST_NOT_BE_EMPTY,
                                 status: HTTP_STATUS.BAD_REQUEST
@@ -76,6 +76,8 @@ export const createPostValidator = validate(
                                     status: HTTP_STATUS.BAD_REQUEST
                                 })
                             }
+
+                            ;(req as Request).parent_post = parentPost
                         }
 
                         // parent_id phải là null nếu type là post gốc
@@ -109,11 +111,19 @@ export const createPostValidator = validate(
             medias: {
                 isArray: true,
                 custom: {
-                    options: (value: any[]) => {
-                        // medias phải là mảng các Media
-                        if (value.some((media) => !isMedia(media))) {
+                    options: (value: any[], { req }) => {
+                        const { type } = req.body as CreatePostReqBody
+
+                        if (type === PostType.Post && value.some((media) => !isMedia(media))) {
                             throw new ErrorWithStatus({
                                 message: POSTS_MESSAGES.MEDIAS_MUST_BE_AN_ARRAY_OF_MEDIA_OBJECT,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        if (type === PostType.Share && !isEmpty(value)) {
+                            throw new ErrorWithStatus({
+                                message: POSTS_MESSAGES.MEDIAS_MUST_BE_EMPTY,
                                 status: HTTP_STATUS.BAD_REQUEST
                             })
                         }
@@ -155,6 +165,7 @@ export const getPostValidator = validate(
                             })
                         }
 
+                        const { user_id } = req.decoded_authorization as TokenPayload
                         const [result] = await databaseService.posts
                             .aggregate<{ post: Post }>([
                                 {
@@ -162,7 +173,7 @@ export const getPostValidator = validate(
                                         _id: new ObjectId(value)
                                     }
                                 },
-                                ...postService.commonAggregatePosts
+                                ...postService.commonAggregatePosts(user_id)
                             ])
                             .toArray()
                         const post = result?.post

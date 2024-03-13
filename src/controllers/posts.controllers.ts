@@ -10,7 +10,8 @@ import postService from '~/services/posts.services'
 
 export const createPostController = async (req: Request<ParamsDictionary, any, CreatePostReqBody>, res: Response) => {
     const { user_id } = req.decoded_authorization as TokenPayload
-    const result = await postService.createPost(user_id, req.body)
+    const parent_post = req.parent_post
+    const result = await postService.createPost({ user_id, payload: req.body, parent_post })
 
     return res.json({
         message: POSTS_MESSAGES.CREATE_POST_SUCCESSFULLY,

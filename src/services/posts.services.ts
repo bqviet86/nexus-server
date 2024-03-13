@@ -1,7 +1,7 @@
 import { Document, ObjectId, WithId } from 'mongodb'
 
 import { POSTS_MESSAGES } from '~/constants/messages'
-import { MediaTypes, NotificationPostAction, NotificationType, VideoEncodingStatus } from '~/constants/enums'
+import { MediaTypes, NotificationPostAction, NotificationType, PostType, VideoEncodingStatus } from '~/constants/enums'
 import { CreatePostReqBody } from '~/models/requests/Post.requests'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import Post from '~/models/schemas/Post.schema'
@@ -10,115 +10,191 @@ import mediaService from './medias.services'
 import notificationService from './notifications.services'
 import databaseService from './database.services'
 import { io, socketUsers } from '~/utils/socket'
+import { delayExecution } from '~/utils/handlers'
 
 class PostService {
-    commonAggregatePosts: Document[] = [
-        {
-            $lookup: {
-                from: 'users',
-                localField: 'user_id',
-                foreignField: '_id',
-                as: 'user'
-            }
-        },
-        {
-            $unwind: {
-                path: '$user'
-            }
-        },
-        {
-            $lookup: {
-                from: 'hashtags',
-                localField: 'hashtags',
-                foreignField: '_id',
-                as: 'hashtags'
-            }
-        },
-        {
-            $facet: {
-                withParent: [
-                    {
-                        $match: {
-                            parent_id: {
-                                $ne: null
+    commonAggregatePosts(user_id: string): Document[] {
+        return [
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$user'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'hashtags',
+                    localField: 'hashtags',
+                    foreignField: '_id',
+                    as: 'hashtags'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'likes',
+                    localField: '_id',
+                    foreignField: 'post_id',
+                    as: 'likes'
+                }
+            },
+            {
+                $addFields: {
+                    like_count: {
+                        $size: '$likes'
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'post_id',
+                    as: 'comments'
+                }
+            },
+            {
+                $addFields: {
+                    comment_count: {
+                        $size: '$comments'
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'posts',
+                    localField: '_id',
+                    foreignField: 'parent_id',
+                    as: 'share_posts'
+                }
+            },
+            {
+                $addFields: {
+                    share_count: {
+                        $size: '$share_posts'
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    likes: {
+                        $filter: {
+                            input: '$likes',
+                            as: 'like',
+                            cond: {
+                                $eq: ['$$like.user_id', new ObjectId(user_id)]
                             }
                         }
-                    },
-                    {
-                        $lookup: {
-                            from: 'posts',
-                            localField: 'parent_id',
-                            foreignField: '_id',
-                            as: 'parent_post'
-                        }
-                    },
-                    {
-                        $unwind: {
-                            path: '$parent_post'
-                        }
-                    },
-                    {
-                        $lookup: {
-                            from: 'users',
-                            localField: 'parent_post.user_id',
-                            foreignField: '_id',
-                            as: 'parent_post.user'
-                        }
-                    },
-                    {
-                        $unwind: {
-                            path: '$parent_post.user'
-                        }
-                    },
-                    {
-                        $lookup: {
-                            from: 'hashtags',
-                            localField: 'parent_post.hashtags',
-                            foreignField: '_id',
-                            as: 'parent_post.hashtags'
-                        }
                     }
-                ],
-                withoutParent: [
-                    {
-                        $match: {
-                            parent_id: null
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            $project: {
-                post: {
-                    $concatArrays: ['$withParent', '$withoutParent']
                 }
-            }
-        },
-        {
-            $unwind: {
-                path: '$post'
-            }
-        },
-        {
-            $project: {
-                post: {
-                    user_id: 0,
-                    parent_id: 0,
-                    user: {
-                        password: 0
-                    },
-                    parent_post: {
+            },
+            {
+                $addFields: {
+                    is_liked: {
+                        $eq: [{ $size: '$likes' }, 1]
+                    }
+                }
+            },
+            {
+                $facet: {
+                    withParent: [
+                        {
+                            $match: {
+                                parent_id: {
+                                    $ne: null
+                                }
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: 'posts',
+                                localField: 'parent_id',
+                                foreignField: '_id',
+                                as: 'parent_post'
+                            }
+                        },
+                        {
+                            $unwind: {
+                                path: '$parent_post'
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: 'users',
+                                localField: 'parent_post.user_id',
+                                foreignField: '_id',
+                                as: 'parent_post.user'
+                            }
+                        },
+                        {
+                            $unwind: {
+                                path: '$parent_post.user'
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: 'hashtags',
+                                localField: 'parent_post.hashtags',
+                                foreignField: '_id',
+                                as: 'parent_post.hashtags'
+                            }
+                        }
+                    ],
+                    withoutParent: [
+                        {
+                            $match: {
+                                parent_id: null
+                            }
+                        },
+                        {
+                            $addFields: {
+                                parent_post: null
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $project: {
+                    post: {
+                        $concatArrays: ['$withParent', '$withoutParent']
+                    }
+                }
+            },
+            {
+                $unwind: {
+                    path: '$post'
+                }
+            },
+            {
+                $project: {
+                    post: {
                         user_id: 0,
                         parent_id: 0,
                         user: {
                             password: 0
+                        },
+                        likes: 0,
+                        comments: 0,
+                        share_posts: 0,
+                        parent_post: {
+                            user_id: 0,
+                            parent_id: 0,
+                            user: {
+                                password: 0
+                            }
                         }
                     }
                 }
             }
-        }
-    ]
+        ]
+    }
 
     async checkAndCreateHashtag(hashtags: string[]) {
         const hashtagDocuments = await Promise.all(
@@ -140,7 +216,15 @@ class PostService {
         return hashtagIds
     }
 
-    async createPost(user_id: string, payload: CreatePostReqBody) {
+    async createPost({
+        user_id,
+        payload,
+        parent_post
+    }: {
+        user_id: string
+        payload: CreatePostReqBody
+        parent_post: Post | undefined
+    }) {
         const hashtags = await this.checkAndCreateHashtag(payload.hashtags)
         const result = await databaseService.posts.insertOne(
             new Post({
@@ -155,7 +239,7 @@ class PostService {
         // Check video status
         const videos = payload.medias.filter((media) => media.type === MediaTypes.Video)
 
-        if (videos.length) {
+        if (post.type === PostType.Post && videos.length) {
             const intervalId = setInterval(async () => {
                 const videosStatus = await Promise.all(
                     videos.map((video) => {
@@ -180,15 +264,42 @@ class PostService {
                         }
                     })
 
-                    if (socketUsers[user_id]) {
-                        socketUsers[user_id].socket_ids.forEach((socket_id) => {
-                            io.to(socket_id).emit(NotificationPostAction.HandlePostSuccess, notification)
-                        })
-                    }
+                    await delayExecution(() => {
+                        if (socketUsers[user_id]) {
+                            socketUsers[user_id].socket_ids.forEach((socket_id) => {
+                                io.to(socket_id).emit(NotificationPostAction.HandlePostSuccess, { notification })
+                            })
+                        }
+                    }, 300)
 
                     clearInterval(intervalId)
                 }
             }, 5000)
+        }
+
+        if (post.type === PostType.Share) {
+            // Create id user of parent post
+            const user_to_id = (parent_post as Post).user_id.toString()
+            const notification = await notificationService.createNotification({
+                user_from_id: user_id,
+                user_to_id,
+                type: NotificationType.Post,
+                action: NotificationPostAction.SharePost,
+                payload: {
+                    post_id: post._id
+                }
+            })
+
+            await delayExecution(() => {
+                if (socketUsers[user_to_id]) {
+                    socketUsers[user_to_id].socket_ids.forEach((socket_id) => {
+                        io.to(socket_id).emit(NotificationPostAction.SharePost, {
+                            notification,
+                            post_id: post._id.toString()
+                        })
+                    })
+                }
+            }, 300)
         }
 
         return post
@@ -237,7 +348,7 @@ class PostService {
                             size: Math.round((limit * 20) / 100)
                         }
                     },
-                    ...this.commonAggregatePosts
+                    ...this.commonAggregatePosts(user_id)
                 ])
                 .toArray()
         ).map(({ post }) => post)
@@ -259,7 +370,7 @@ class PostService {
                             size: limit - friendPosts.length
                         }
                     },
-                    ...this.commonAggregatePosts
+                    ...this.commonAggregatePosts(user_id)
                 ])
                 .toArray()
         ).map(({ post }) => post)

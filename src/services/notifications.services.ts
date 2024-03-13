@@ -152,19 +152,37 @@ class NotificationService {
         }
     ]
 
-    async createNotification(payload: CreateNotificationBody) {
-        const insertResult = await databaseService.notifications.insertOne(
-            new Notification({
-                ...payload,
-                user_from_id: payload.user_from_id ? new ObjectId(payload.user_from_id) : undefined,
-                user_to_id: new ObjectId(payload.user_to_id)
-            })
-        )
+    async createNotification(body: CreateNotificationBody) {
+        const { user_from_id, user_to_id, type, action, payload } = body
+        let notificationId: ObjectId
+
+        const notification = await databaseService.notifications.findOne({
+            ...(user_from_id ? { user_from_id: new ObjectId(user_from_id) } : {}),
+            user_to_id: new ObjectId(user_to_id),
+            type,
+            action,
+            ...(payload.post_id ? { 'payload.post_id': new ObjectId(payload.post_id) } : {}),
+            ...(payload.friend_id ? { 'payload.friend_id': new ObjectId(payload.friend_id) } : {})
+        })
+
+        if (notification) {
+            notificationId = notification._id
+        } else {
+            const { insertedId } = await databaseService.notifications.insertOne(
+                new Notification({
+                    ...body,
+                    user_from_id: user_from_id ? new ObjectId(user_from_id) : undefined,
+                    user_to_id: new ObjectId(user_to_id)
+                })
+            )
+            notificationId = insertedId
+        }
+
         const [result] = await databaseService.notifications
             .aggregate<{ notification: Notification }>([
                 {
                     $match: {
-                        _id: insertResult.insertedId
+                        _id: notificationId
                     }
                 },
                 ...this.commonAggregateNotifications
