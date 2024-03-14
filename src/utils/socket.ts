@@ -60,7 +60,14 @@ const initSocket = (httpServer: ServerHttp) => {
             }
         }
 
-        console.log('socketUsers', socketUsers)
+        console.log(
+            'socketUsers',
+            Object.keys(socketUsers).map((userId) => ({
+                user_id: userId,
+                ...socketUsers[userId],
+                previous_post_ids: socketUsers[userId].previous_post_ids.length
+            }))
+        )
 
         socket.use(async (_, next) => {
             const access_token = socket.handshake.auth.access_token as string
@@ -80,14 +87,21 @@ const initSocket = (httpServer: ServerHttp) => {
             }
         })
 
-        socket.on('disconnect', () => {
+        socket.on('disconnect', (reason) => {
             socketUsers[user_id].socket_ids = socketUsers[user_id].socket_ids.filter((id) => id !== socketId)
 
-            if (!socketUsers[user_id].socket_ids.length) {
+            if (reason === 'transport close' && !socketUsers[user_id].socket_ids.length) {
                 delete socketUsers[user_id]
             }
 
-            console.log('socketUsers', socketUsers)
+            console.log(
+                'socketUsers',
+                Object.keys(socketUsers).map((userId) => ({
+                    user_id: userId,
+                    ...socketUsers[userId],
+                    previous_post_ids: socketUsers[userId].previous_post_ids.length
+                }))
+            )
         })
 
         socket.on(

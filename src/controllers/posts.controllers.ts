@@ -35,7 +35,7 @@ export const getNewsFeedController = async (
     const { user_id } = req.decoded_authorization as TokenPayload
     const page = Number(req.query.page)
     const limit = Number(req.query.limit)
-    const { posts, total_posts } = await postService.getNewsFeed({ user_id, limit })
+    const { posts, total_posts } = await postService.getNewsFeed({ user_id, page, limit })
 
     return res.json({
         message: POSTS_MESSAGES.GET_NEWS_FEED_SUCCESSFULLY,

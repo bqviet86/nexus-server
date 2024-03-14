@@ -305,7 +305,7 @@ class PostService {
         return post
     }
 
-    async getNewsFeed({ user_id, limit }: { user_id: string; limit: number }) {
+    async getNewsFeed({ user_id, page, limit }: { user_id: string; page: number; limit: number }) {
         const previousPostIds = socketUsers[user_id].previous_post_ids.map((id) => new ObjectId(id))
         const [friends, total_posts] = await Promise.all([
             databaseService.friends
@@ -322,13 +322,14 @@ class PostService {
                 .toArray(),
             databaseService.posts.countDocuments({
                 user_id: {
-                    $nin: [new ObjectId(user_id)]
+                    $ne: new ObjectId(user_id)
                 }
             })
         ])
         const friendIds = friends.map(({ user_from_id, user_to_id }) =>
             user_from_id.toString() === user_id ? user_to_id : user_from_id
         )
+        const isLastPage = total_posts - (page - 1) * limit <= limit
 
         const friendPosts = (
             await databaseService.posts
@@ -345,7 +346,7 @@ class PostService {
                     },
                     {
                         $sample: {
-                            size: Math.round((limit * 20) / 100)
+                            size: isLastPage ? limit : Math.round((limit * 20) / 100)
                         }
                     },
                     ...this.commonAggregatePosts(user_id)
