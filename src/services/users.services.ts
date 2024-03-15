@@ -419,6 +419,88 @@ class UserService {
 
         return friends
     }
+
+    async getAllFriendSuggestions(user_id: string) {
+        const users = await databaseService.users
+            .aggregate<User>([
+                {
+                    $match: {
+                        _id: {
+                            $ne: new ObjectId(user_id)
+                        },
+                        role: UserRole.User
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'friends',
+                        localField: '_id',
+                        foreignField: 'user_from_id',
+                        as: 'friends_one'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'friends',
+                        localField: '_id',
+                        foreignField: 'user_to_id',
+                        as: 'friends_two'
+                    }
+                },
+                {
+                    $addFields: {
+                        friends_one: {
+                            $map: {
+                                input: '$friends_one',
+                                as: 'friend',
+                                in: '$$friend.user_to_id'
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends_two: {
+                            $map: {
+                                input: '$friends_two',
+                                as: 'friend',
+                                in: '$$friend.user_from_id'
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends: {
+                            $concatArrays: ['$friends_one', '$friends_two']
+                        }
+                    }
+                },
+                {
+                    $match: {
+                        friends: {
+                            $nin: [new ObjectId(user_id)]
+                        }
+                    }
+                },
+                {
+                    $sample: {
+                        size: 10
+                    }
+                },
+                {
+                    $project: {
+                        password: 0,
+                        friends_one: 0,
+                        friends_two: 0,
+                        friends: 0
+                    }
+                }
+            ])
+            .toArray()
+
+        return users
+    }
 }
 
 const userService = new UserService()

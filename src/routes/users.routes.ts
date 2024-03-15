@@ -3,6 +3,7 @@ import { Router } from 'express'
 import {
     changePasswordController,
     getAllFriendRequestsController,
+    getAllFriendSuggestionsController,
     getMeController,
     loginAdminController,
     loginController,
@@ -152,6 +153,14 @@ usersRouter.patch(
  * Header: { Authorization: Bearer <access_token> }
  */
 usersRouter.get('/friend/request', accessTokenValidator, wrapRequestHandler(getAllFriendRequestsController))
+
+/**
+ * Description: Get all friend suggestions
+ * Path: /friend/suggestion
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ */
+usersRouter.get('/friend/suggestion', accessTokenValidator, wrapRequestHandler(getAllFriendSuggestionsController))
 
 // Admin routes
 

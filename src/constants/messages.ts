@@ -40,6 +40,7 @@ export const USERS_MESSAGES = {
     OLD_PASSWORD_NOT_MATCH: 'Mật khẩu cũ không khớp',
     USER_ID_IS_REQUIRED: 'ID người dùng không được để trống',
     USER_ID_IS_INVALID: 'ID người dùng không hợp lệ',
+    USER_IS_ALREADY_FRIEND: 'Người dùng đã là bạn bè',
     FRIEND_STATUS_IS_INVALID: 'Trạng thái bạn bè không hợp lệ',
     USER_NOT_ADMIN: 'Người dùng không phải là admin',
     SEARCH_MUST_BE_A_STRING: 'Từ khóa tìm kiếm (search) phải là một chuỗi',
@@ -60,6 +61,7 @@ export const USERS_MESSAGES = {
     UPDATE_ME_SUCCESS: 'Cập nhật thông tin người dùng thành công',
     CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công',
     GET_ALL_FRIEND_REQUESTS_SUCCESS: 'Lấy tất cả lời mời kết bạn thành công',
+    GET_ALL_FRIEND_SUGGESTIONS_SUCCESS: 'Lấy tất cả gợi ý kết bạn thành công',
     SEND_FRIEND_REQUEST_SUCCESS: 'Gửi lời mời kết bạn thành công',
     RESPONSE_FRIEND_REQUEST_SUCCESS: 'Phản hồi lời mời kết bạn thành công'
 }

@@ -11,6 +11,7 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
 import { LoginReqBody, TokenPayload } from '~/models/requests/User.requests'
+import Friend from '~/models/schemas/Friend.schema'
 import databaseService from '~/services/database.services'
 import usersServices from '~/services/users.services'
 import { hashPassword } from '~/utils/crypto'
@@ -150,7 +151,7 @@ const userIdSchema: ParamSchema = {
         options: async (value: string, { req }) => {
             const { user_id } = req.decoded_authorization as TokenPayload
 
-            if (!ObjectId.isValid(value) || value === user_id) {
+            if (!ObjectId.isValid(value)) {
                 throw new ErrorWithStatus({
                     message: USERS_MESSAGES.USER_ID_IS_INVALID,
                     status: HTTP_STATUS.BAD_REQUEST
@@ -378,7 +379,60 @@ export const changePasswordValidator = validate(
 export const sendFriendRequestValidator = validate(
     checkSchema(
         {
-            user_to_id: userIdSchema
+            user_to_id: {
+                trim: true,
+                custom: {
+                    options: async (value: string, { req }) => {
+                        const { user_id } = req.decoded_authorization as TokenPayload
+
+                        if (!ObjectId.isValid(value) || value === user_id) {
+                            throw new ErrorWithStatus({
+                                message: USERS_MESSAGES.USER_ID_IS_INVALID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const [friend] = await databaseService.friends
+                            .aggregate<Friend>([
+                                {
+                                    $match: {
+                                        $or: [
+                                            {
+                                                user_from_id: new ObjectId(user_id),
+                                                user_to_id: new ObjectId(value)
+                                            },
+                                            {
+                                                user_from_id: new ObjectId(value),
+                                                user_to_id: new ObjectId(user_id)
+                                            }
+                                        ]
+                                    }
+                                }
+                            ])
+                            .toArray()
+
+                        if (friend) {
+                            throw new ErrorWithStatus({
+                                message: USERS_MESSAGES.USER_IS_ALREADY_FRIEND,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const user = await databaseService.users.findOne({
+                            _id: new ObjectId(value)
+                        })
+
+                        if (user === null) {
+                            throw new ErrorWithStatus({
+                                message: USERS_MESSAGES.USER_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        return true
+                    }
+                }
+            }
         },
         ['params']
     )
