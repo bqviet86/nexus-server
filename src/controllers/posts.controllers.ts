@@ -3,7 +3,12 @@ import { ParamsDictionary } from 'express-serve-static-core'
 
 import { POSTS_MESSAGES } from '~/constants/messages'
 import { PaginationReqQuery } from '~/models/requests/Common.requests'
-import { CreatePostReqBody, DeletePostReqParams, GetPostReqParams } from '~/models/requests/Post.requests'
+import {
+    CreatePostReqBody,
+    DeletePostReqParams,
+    GetPostReqParams,
+    GetProfilePostsReqParams
+} from '~/models/requests/Post.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
 import Post from '~/models/schemas/Post.schema'
 import postService from '~/services/posts.services'
@@ -39,6 +44,27 @@ export const getNewsFeedController = async (
 
     return res.json({
         message: POSTS_MESSAGES.GET_NEWS_FEED_SUCCESSFULLY,
+        result: {
+            posts,
+            page,
+            limit,
+            total_pages: Math.ceil(total_posts / limit)
+        }
+    })
+}
+
+export const getProfilePostsController = async (
+    req: Request<GetProfilePostsReqParams, any, any, PaginationReqQuery>,
+    res: Response
+) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const { profile_id } = req.params
+    const page = Number(req.query.page)
+    const limit = Number(req.query.limit)
+    const { posts, total_posts } = await postService.getProfilePosts({ user_id, profile_id, page, limit })
+
+    return res.json({
+        message: POSTS_MESSAGES.GET_PROFILE_POSTS_SUCCESSFULLY,
         result: {
             posts,
             page,

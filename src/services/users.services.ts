@@ -4,7 +4,14 @@ import fsPromise from 'fs/promises'
 import { Document, ObjectId, WithId } from 'mongodb'
 import { config } from 'dotenv'
 
-import { FriendStatus, NotificationFriendAction, NotificationType, TokenTypes, UserRole } from '~/constants/enums'
+import {
+    FriendStatus,
+    MediaTypes,
+    NotificationFriendAction,
+    NotificationType,
+    TokenTypes,
+    UserRole
+} from '~/constants/enums'
 import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
@@ -246,6 +253,291 @@ class UserService {
         return user
     }
 
+    async getProfile(user_id: string, profile_id: string) {
+        const [user] = await databaseService.users
+            .aggregate<User>([
+                {
+                    $match: {
+                        _id: new ObjectId(profile_id)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'friends',
+                        localField: '_id',
+                        foreignField: 'user_from_id',
+                        as: 'friends_one'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'friends',
+                        localField: '_id',
+                        foreignField: 'user_to_id',
+                        as: 'friends_two'
+                    }
+                },
+                {
+                    $addFields: {
+                        friends_send: {
+                            $filter: {
+                                input: '$friends_two',
+                                as: 'friend',
+                                cond: {
+                                    $eq: ['$$friend.status', FriendStatus.Pending]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends_receive: {
+                            $filter: {
+                                input: '$friends_one',
+                                as: 'friend',
+                                cond: {
+                                    $eq: ['$$friend.status', FriendStatus.Pending]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends_decline: {
+                            $filter: {
+                                input: '$friends_two',
+                                as: 'friend',
+                                cond: {
+                                    $eq: ['$$friend.status', FriendStatus.Declined]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        is_sending: {
+                            $in: [
+                                new ObjectId(user_id),
+                                {
+                                    $map: {
+                                        input: '$friends_send',
+                                        as: 'friend',
+                                        in: '$$friend.user_from_id'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        is_receiving: {
+                            $in: [
+                                new ObjectId(user_id),
+                                {
+                                    $map: {
+                                        input: '$friends_receive',
+                                        as: 'friend',
+                                        in: '$$friend.user_to_id'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        is_declined: {
+                            $in: [
+                                new ObjectId(user_id),
+                                {
+                                    $map: {
+                                        input: '$friends_decline',
+                                        as: 'friend',
+                                        in: '$$friend.user_from_id'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends_one: {
+                            $filter: {
+                                input: '$friends_one',
+                                as: 'friend',
+                                cond: {
+                                    $eq: ['$$friend.status', FriendStatus.Accepted]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends_two: {
+                            $filter: {
+                                input: '$friends_two',
+                                as: 'friend',
+                                cond: {
+                                    $eq: ['$$friend.status', FriendStatus.Accepted]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends_one: {
+                            $map: {
+                                input: '$friends_one',
+                                as: 'friend',
+                                in: '$$friend.user_to_id'
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends_two: {
+                            $map: {
+                                input: '$friends_two',
+                                as: 'friend',
+                                in: '$$friend.user_from_id'
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends: {
+                            $concatArrays: ['$friends_one', '$friends_two']
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friend_count: {
+                            $size: '$friends'
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        is_friend: {
+                            $in: [new ObjectId(user_id), '$friends']
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        friends: {
+                            $slice: ['$friends', 8]
+                        }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'friends',
+                        foreignField: '_id',
+                        as: 'friends'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'posts',
+                        localField: '_id',
+                        foreignField: 'user_id',
+                        as: 'posts'
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$posts',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $sort: {
+                        'posts.created_at': -1
+                    }
+                },
+                {
+                    $addFields: {
+                        images: '$posts.medias'
+                    }
+                },
+                {
+                    $addFields: {
+                        images: {
+                            $filter: {
+                                input: '$images',
+                                as: 'image',
+                                cond: {
+                                    $eq: ['$$image.type', MediaTypes.Image]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$images',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $group: {
+                        _id: new ObjectId(profile_id),
+                        name: { $first: '$name' },
+                        email: { $first: '$email' },
+                        date_of_birth: { $first: '$date_of_birth' },
+                        sex: { $first: '$sex' },
+                        phone_number: { $first: '$phone_number' },
+                        role: { $first: '$role' },
+                        avatar: { $first: '$avatar' },
+                        created_at: { $first: '$created_at' },
+                        updated_at: { $first: '$updated_at' },
+                        friends: { $first: '$friends' },
+                        friend_count: { $first: '$friend_count' },
+                        is_friend: { $first: '$is_friend' },
+                        is_sending: { $first: '$is_sending' },
+                        is_receiving: { $first: '$is_receiving' },
+                        is_declined: { $first: '$is_declined' },
+                        images: { $push: '$images' }
+                    }
+                },
+                {
+                    $addFields: {
+                        images: {
+                            $filter: {
+                                input: '$images',
+                                as: 'image',
+                                cond: {
+                                    $ne: ['$$image', null]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        friends: {
+                            password: 0
+                        }
+                    }
+                }
+            ])
+            .toArray()
+
+        return user
+    }
+
     async updateAvatar(user_id: string, req: Request) {
         // Xoá avatar cũ
         const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
@@ -324,7 +616,21 @@ class UserService {
         return { message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS }
     }
 
-    async sendFriendRequest(user_from_id: string, user_to_id: string) {
+    async sendFriendRequest({
+        user_from_id,
+        user_to_id,
+        friend
+    }: {
+        user_from_id: string
+        user_to_id: string
+        friend?: Friend
+    }) {
+        if (friend) {
+            await databaseService.friends.deleteOne({
+                _id: friend._id as ObjectId
+            })
+        }
+
         const result = await databaseService.friends.insertOne(
             new Friend({
                 user_from_id: new ObjectId(user_from_id),
@@ -397,6 +703,23 @@ class UserService {
         }
 
         return { message: USERS_MESSAGES.RESPONSE_FRIEND_REQUEST_SUCCESS }
+    }
+
+    async cancelFriendRequest(user_from_id: string, user_to_id: string) {
+        await Promise.all([
+            databaseService.friends.deleteOne({
+                user_from_id: new ObjectId(user_from_id),
+                user_to_id: new ObjectId(user_to_id)
+            }),
+            databaseService.notifications.deleteOne({
+                user_from_id: new ObjectId(user_from_id),
+                user_to_id: new ObjectId(user_to_id),
+                type: NotificationType.Friend,
+                action: NotificationFriendAction.SendFriendRequest
+            })
+        ])
+
+        return { message: USERS_MESSAGES.CANCEL_FRIEND_REQUEST_SUCCESS }
     }
 
     async getAllFriendRequests(user_id: string) {
@@ -500,6 +823,91 @@ class UserService {
             .toArray()
 
         return users
+    }
+
+    async getAllFriends(user_id: string) {
+        const friends = (
+            await databaseService.friends
+                .aggregate<{ friend: User }>([
+                    {
+                        $facet: {
+                            friends_one: [
+                                {
+                                    $match: {
+                                        user_from_id: new ObjectId(user_id),
+                                        status: FriendStatus.Accepted
+                                    }
+                                }
+                            ],
+                            friends_two: [
+                                {
+                                    $match: {
+                                        user_to_id: new ObjectId(user_id),
+                                        status: FriendStatus.Accepted
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            friends_one: {
+                                $map: {
+                                    input: '$friends_one',
+                                    as: 'friend',
+                                    in: '$$friend.user_to_id'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            friends_two: {
+                                $map: {
+                                    input: '$friends_two',
+                                    as: 'friend',
+                                    in: '$$friend.user_from_id'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            friend: {
+                                $concatArrays: ['$friends_one', '$friends_two']
+                            }
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$friend'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: 'friend',
+                            foreignField: '_id',
+                            as: 'friend'
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$friend'
+                        }
+                    },
+                    {
+                        $project: {
+                            friend: {
+                                password: 0
+                            }
+                        }
+                    }
+                ])
+                .toArray()
+        ).map(({ friend }) => friend)
+
+        return friends
     }
 }
 

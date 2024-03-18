@@ -40,8 +40,11 @@ export const USERS_MESSAGES = {
     OLD_PASSWORD_NOT_MATCH: 'Mật khẩu cũ không khớp',
     USER_ID_IS_REQUIRED: 'ID người dùng không được để trống',
     USER_ID_IS_INVALID: 'ID người dùng không hợp lệ',
+    USER_HAS_SENT_YOU_A_FRIEND_REQUEST: 'Người dùng đã gửi lời mời kết bạn cho bạn',
     USER_IS_ALREADY_FRIEND: 'Người dùng đã là bạn bè',
+    USER_HAS_DECLINED_YOUR_FRIEND_REQUEST: 'Người dùng đã từ chối lời mời kết bạn trước đó của bạn',
     FRIEND_STATUS_IS_INVALID: 'Trạng thái bạn bè không hợp lệ',
+    USER_HAS_NOT_SENT_YOU_A_FRIEND_REQUEST: 'Người dùng chưa gửi lời mời kết bạn cho bạn',
     USER_NOT_ADMIN: 'Người dùng không phải là admin',
     SEARCH_MUST_BE_A_STRING: 'Từ khóa tìm kiếm (search) phải là một chuỗi',
 
@@ -56,6 +59,8 @@ export const USERS_MESSAGES = {
     RESET_PASSWORD_SUCCESS: 'Đặt lại mật khẩu thành công',
     REFRESH_TOKEN_SUCCESS: 'Refresh token thành công',
     GET_ME_SUCCESS: 'Lấy thông tin người dùng thành công',
+    GET_FRIENDS_SUCCESS: 'Lấy tất cả bạn bè thành công',
+    GET_PROFILE_SUCCESS: 'Lấy thông tin người dùng thành công',
     GET_ALL_USERS_SUCCESS: 'Lấy tất cả người dùng thành công',
     UPDATE_AVATAR_SUCCESS: 'Cập nhật ảnh đại diện thành công',
     UPDATE_ME_SUCCESS: 'Cập nhật thông tin người dùng thành công',
@@ -63,7 +68,8 @@ export const USERS_MESSAGES = {
     GET_ALL_FRIEND_REQUESTS_SUCCESS: 'Lấy tất cả lời mời kết bạn thành công',
     GET_ALL_FRIEND_SUGGESTIONS_SUCCESS: 'Lấy tất cả gợi ý kết bạn thành công',
     SEND_FRIEND_REQUEST_SUCCESS: 'Gửi lời mời kết bạn thành công',
-    RESPONSE_FRIEND_REQUEST_SUCCESS: 'Phản hồi lời mời kết bạn thành công'
+    RESPONSE_FRIEND_REQUEST_SUCCESS: 'Phản hồi lời mời kết bạn thành công',
+    CANCEL_FRIEND_REQUEST_SUCCESS: 'Hủy lời mời kết bạn thành công'
 }
 
 export const MEDIAS_MESSAGES = {
@@ -88,6 +94,8 @@ export const POSTS_MESSAGES = {
     HASHTAGS_MUST_BE_AN_ARRAY_OF_STRING: 'Hashtags phải là một mảng các chuỗi',
     MEDIAS_MUST_BE_AN_ARRAY_OF_MEDIA_OBJECT: 'Medias phải là một mảng các Media object',
     MEDIAS_MUST_BE_EMPTY: 'Medias phải là mảng rỗng',
+    INVALID_PROFILE_ID: 'ID profile không hợp lệ',
+    PROFILE_NOT_FOUND: 'Không tìm thấy profile',
     INVALID_POST_ID: 'ID post không hợp lệ',
     POST_NOT_FOUND: 'Không tìm thấy post',
     NOT_HAVE_PERMISSION_TO_DELETE_POST: 'Bạn không có quyền xóa post này',
@@ -95,6 +103,7 @@ export const POSTS_MESSAGES = {
     CREATE_POST_SUCCESSFULLY: 'Tạo post thành công',
     GET_POST_SUCCESSFULLY: 'Lấy post thành công',
     GET_NEWS_FEED_SUCCESSFULLY: 'Lấy news feed thành công',
+    GET_PROFILE_POSTS_SUCCESSFULLY: 'Lấy tất cả post của profile thành công',
     DELETE_POST_SUCCESSFULLY: 'Xóa post thành công'
 }
 

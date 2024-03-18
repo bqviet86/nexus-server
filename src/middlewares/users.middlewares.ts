@@ -148,9 +148,7 @@ const phoneNumberSchema: ParamSchema = {
 const userIdSchema: ParamSchema = {
     trim: true,
     custom: {
-        options: async (value: string, { req }) => {
-            const { user_id } = req.decoded_authorization as TokenPayload
-
+        options: async (value: string) => {
             if (!ObjectId.isValid(value)) {
                 throw new ErrorWithStatus({
                     message: USERS_MESSAGES.USER_ID_IS_INVALID,
@@ -311,6 +309,15 @@ export const refreshTokenValidator = validate(
     )
 )
 
+export const getProfileValidator = validate(
+    checkSchema(
+        {
+            profile_id: userIdSchema
+        },
+        ['params']
+    )
+)
+
 export const updateMeValidator = validate(
     checkSchema(
         {
@@ -412,10 +419,28 @@ export const sendFriendRequestValidator = validate(
                             .toArray()
 
                         if (friend) {
-                            throw new ErrorWithStatus({
-                                message: USERS_MESSAGES.USER_IS_ALREADY_FRIEND,
-                                status: HTTP_STATUS.BAD_REQUEST
-                            })
+                            if (friend.status === FriendStatus.Pending) {
+                                throw new ErrorWithStatus({
+                                    message: USERS_MESSAGES.USER_HAS_SENT_YOU_A_FRIEND_REQUEST,
+                                    status: HTTP_STATUS.BAD_REQUEST
+                                })
+                            }
+
+                            if (friend.status === FriendStatus.Accepted) {
+                                throw new ErrorWithStatus({
+                                    message: USERS_MESSAGES.USER_IS_ALREADY_FRIEND,
+                                    status: HTTP_STATUS.BAD_REQUEST
+                                })
+                            }
+
+                            if (friend.status === FriendStatus.Declined && friend.user_from_id.toString() === user_id) {
+                                throw new ErrorWithStatus({
+                                    message: USERS_MESSAGES.USER_HAS_DECLINED_YOUR_FRIEND_REQUEST,
+                                    status: HTTP_STATUS.BAD_REQUEST
+                                })
+                            }
+
+                            ;(req as Request).friend = friend
                         }
 
                         const user = await databaseService.users.findOne({
@@ -450,6 +475,63 @@ export const responseFriendRequestValidator = validate(
             }
         },
         ['params', 'body']
+    )
+)
+
+export const cancelFriendRequestValidator = validate(
+    checkSchema(
+        {
+            user_id: {
+                trim: true,
+                custom: {
+                    options: async (value: string, { req }) => {
+                        if (!ObjectId.isValid(value)) {
+                            throw new ErrorWithStatus({
+                                message: USERS_MESSAGES.USER_ID_IS_INVALID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const { user_id } = req.decoded_authorization as TokenPayload
+                        const friend = await databaseService.friends.findOne({
+                            user_from_id: new ObjectId(user_id),
+                            user_to_id: new ObjectId(value),
+                            status: FriendStatus.Pending
+                        })
+
+                        if (friend === null) {
+                            throw new ErrorWithStatus({
+                                message: USERS_MESSAGES.USER_HAS_NOT_SENT_YOU_A_FRIEND_REQUEST,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const user = await databaseService.users.findOne({
+                            _id: new ObjectId(value)
+                        })
+
+                        if (user === null) {
+                            throw new ErrorWithStatus({
+                                message: USERS_MESSAGES.USER_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        return true
+                    }
+                }
+            }
+        },
+        ['params']
+    )
+)
+
+export const getAllFriendsValidator = validate(
+    checkSchema(
+        {
+            user_id: userIdSchema
+        },
+        ['params']
     )
 )
 

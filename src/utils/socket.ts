@@ -15,7 +15,8 @@ import { delayExecution } from './handlers'
 
 type UserSocket = {
     socket_ids: string[]
-    previous_post_ids: string[]
+    previous_post_ids_news_feed: string[]
+    previous_post_ids_profile: string[]
 }
 
 export let io: Server
@@ -56,7 +57,8 @@ const initSocket = (httpServer: ServerHttp) => {
         } else {
             socketUsers[user_id] = {
                 socket_ids: [socketId],
-                previous_post_ids: []
+                previous_post_ids_news_feed: [],
+                previous_post_ids_profile: []
             }
         }
 
@@ -65,7 +67,8 @@ const initSocket = (httpServer: ServerHttp) => {
             Object.keys(socketUsers).map((userId) => ({
                 user_id: userId,
                 ...socketUsers[userId],
-                previous_post_ids: socketUsers[userId].previous_post_ids.length
+                previous_post_ids_news_feed: socketUsers[userId].previous_post_ids_news_feed.length,
+                previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length
             }))
         )
 
@@ -99,7 +102,8 @@ const initSocket = (httpServer: ServerHttp) => {
                 Object.keys(socketUsers).map((userId) => ({
                     user_id: userId,
                     ...socketUsers[userId],
-                    previous_post_ids: socketUsers[userId].previous_post_ids.length
+                    previous_post_ids_news_feed: socketUsers[userId].previous_post_ids_news_feed.length,
+                    previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length
                 }))
             )
         })

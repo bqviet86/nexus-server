@@ -7,7 +7,10 @@ import { UserRole } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import {
+    CancelFriendRequestReqParams,
     ChangePasswordReqBody,
+    GetAllFriendsReqParams,
+    GetProfileReqParams,
     LoginReqBody,
     LogoutReqBody,
     RefreshTokenReqBody,
@@ -73,6 +76,17 @@ export const getMeController = async (req: Request, res: Response) => {
     })
 }
 
+export const getProfileController = async (req: Request<GetProfileReqParams>, res: Response) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const { profile_id } = req.params
+    const result = await usersService.getProfile(user_id, profile_id)
+
+    return res.json({
+        message: USERS_MESSAGES.GET_PROFILE_SUCCESS,
+        result
+    })
+}
+
 export const updateAvatarController = async (req: Request, res: Response) => {
     const { user_id } = req.decoded_authorization as TokenPayload
     const result = await usersService.updateAvatar(user_id, req)
@@ -106,8 +120,9 @@ export const changePasswordController = async (
 
 export const sendFriendRequestController = async (req: Request<SendFriendRequestReqParams>, res: Response) => {
     const { user_id } = req.decoded_authorization as TokenPayload
+    const friend = req.friend
     const { user_to_id } = req.params
-    const result = await usersService.sendFriendRequest(user_id, user_to_id)
+    const result = await usersService.sendFriendRequest({ user_from_id: user_id, user_to_id, friend })
 
     return res.json(result)
 }
@@ -120,6 +135,14 @@ export const responseFriendRequestController = async (
     const { user_from_id } = req.params
     const { status } = req.body
     const result = await usersService.responseFriendRequest({ user_from_id, user_to_id: user_id, status })
+
+    return res.json(result)
+}
+
+export const cancelFriendRequestController = async (req: Request<CancelFriendRequestReqParams>, res: Response) => {
+    const { user_id: user_from_id } = req.decoded_authorization as TokenPayload
+    const { user_id: user_to_id } = req.params
+    const result = await usersService.cancelFriendRequest(user_from_id, user_to_id)
 
     return res.json(result)
 }
@@ -140,6 +163,16 @@ export const getAllFriendSuggestionsController = async (req: Request, res: Respo
 
     return res.json({
         message: USERS_MESSAGES.GET_ALL_FRIEND_SUGGESTIONS_SUCCESS,
+        result
+    })
+}
+
+export const getAllFriendsController = async (req: Request<GetAllFriendsReqParams>, res: Response) => {
+    const { user_id } = req.params
+    const result = await usersService.getAllFriends(user_id)
+
+    return res.json({
+        message: USERS_MESSAGES.GET_FRIENDS_SUCCESS,
         result
     })
 }

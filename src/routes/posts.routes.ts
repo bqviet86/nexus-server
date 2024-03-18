@@ -4,13 +4,15 @@ import {
     createPostController,
     deletePostController,
     getNewsFeedController,
-    getPostController
+    getPostController,
+    getProfilePostsController
 } from '~/controllers/posts.controllers'
 import { paginationValidator } from '~/middlewares/common.middlewares'
 import {
     createPostValidator,
     deletePostValidator,
     getPostValidator,
+    getProfilePostsValidator,
     toLowerCaseHashTags
 } from '~/middlewares/posts.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
@@ -41,6 +43,22 @@ postsRouter.post(
  * Query: { page: number, limit: number }
  */
 postsRouter.get('/news-feed', accessTokenValidator, paginationValidator, wrapRequestHandler(getNewsFeedController))
+
+/**
+ * Description: Get posts of a profile
+ * Path: /profile/:profile_id
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Params: { profile_id: string }
+ * Query: { page: number, limit: number }
+ */
+postsRouter.get(
+    '/profile/:profile_id',
+    accessTokenValidator,
+    getProfilePostsValidator,
+    paginationValidator,
+    wrapRequestHandler(getProfilePostsController)
+)
 
 /**
  * Description: Get a post

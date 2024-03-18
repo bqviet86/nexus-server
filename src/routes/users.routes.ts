@@ -1,10 +1,13 @@
 import { Router } from 'express'
 
 import {
+    cancelFriendRequestController,
     changePasswordController,
     getAllFriendRequestsController,
     getAllFriendSuggestionsController,
+    getAllFriendsController,
     getMeController,
+    getProfileController,
     loginAdminController,
     loginController,
     logoutAdminController,
@@ -19,7 +22,10 @@ import {
 import { filterMiddleware } from '~/middlewares/common.middlewares'
 import {
     accessTokenValidator,
+    cancelFriendRequestValidator,
     changePasswordValidator,
+    getAllFriendsValidator,
+    getProfileValidator,
     isAdminValidator,
     loginValidator,
     refreshTokenValidator,
@@ -81,6 +87,15 @@ usersRouter.post('/refresh-token', refreshTokenValidator, wrapRequestHandler(ref
  * Header: { Authorization: Bearer <access_token> }
  */
 usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeController))
+
+/**
+ * Description: Get profile
+ * Path: /:profile_id
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { profile_id: string }
+ */
+usersRouter.get('/:profile_id', accessTokenValidator, getProfileValidator, wrapRequestHandler(getProfileController))
 
 /**
  * Description: Update my avatar
@@ -147,6 +162,20 @@ usersRouter.patch(
 )
 
 /**
+ * Description: Cancel friend request
+ * Path: /friend/request/:user_id
+ * Method: DELETE
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { user_id: string }
+ */
+usersRouter.delete(
+    '/friend/request/:user_id',
+    accessTokenValidator,
+    cancelFriendRequestValidator,
+    wrapRequestHandler(cancelFriendRequestController)
+)
+
+/**
  * Description: Get all friend requests
  * Path: /friend/request
  * Method: GET
@@ -161,6 +190,20 @@ usersRouter.get('/friend/request', accessTokenValidator, wrapRequestHandler(getA
  * Header: { Authorization: Bearer <access_token> }
  */
 usersRouter.get('/friend/suggestion', accessTokenValidator, wrapRequestHandler(getAllFriendSuggestionsController))
+
+/**
+ * Description: Get all friends
+ * Path: /friend/all/:user_id
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { user_id: string }
+ */
+usersRouter.get(
+    '/friend/all/:user_id',
+    accessTokenValidator,
+    getAllFriendsValidator,
+    wrapRequestHandler(getAllFriendsController)
+)
 
 // Admin routes
 

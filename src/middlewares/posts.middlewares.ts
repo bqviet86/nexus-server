@@ -151,6 +151,38 @@ export const toLowerCaseHashTags = (
     next()
 }
 
+export const getProfilePostsValidator = validate(
+    checkSchema(
+        {
+            profile_id: {
+                isString: true,
+                custom: {
+                    options: async (value) => {
+                        if (!ObjectId.isValid(value)) {
+                            throw new ErrorWithStatus({
+                                message: POSTS_MESSAGES.INVALID_PROFILE_ID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const user = await databaseService.users.findOne({
+                            _id: new ObjectId(value)
+                        })
+
+                        if (user === null) {
+                            throw new ErrorWithStatus({
+                                message: POSTS_MESSAGES.PROFILE_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+                    }
+                }
+            }
+        },
+        ['params']
+    )
+)
+
 export const getPostValidator = validate(
     checkSchema(
         {

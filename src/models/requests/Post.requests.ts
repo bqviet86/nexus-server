@@ -15,6 +15,10 @@ export interface GetPostReqParams extends ParamsDictionary {
     post_id: string
 }
 
+export interface GetProfilePostsReqParams extends ParamsDictionary {
+    profile_id: string
+}
+
 export interface DeletePostReqParams extends ParamsDictionary {
     post_id: string
 }

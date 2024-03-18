@@ -1,7 +1,14 @@
 import { Document, ObjectId, WithId } from 'mongodb'
 
 import { POSTS_MESSAGES } from '~/constants/messages'
-import { MediaTypes, NotificationPostAction, NotificationType, PostType, VideoEncodingStatus } from '~/constants/enums'
+import {
+    FriendStatus,
+    MediaTypes,
+    NotificationPostAction,
+    NotificationType,
+    PostType,
+    VideoEncodingStatus
+} from '~/constants/enums'
 import { CreatePostReqBody } from '~/models/requests/Post.requests'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import Post from '~/models/schemas/Post.schema'
@@ -306,7 +313,7 @@ class PostService {
     }
 
     async getNewsFeed({ user_id, page, limit }: { user_id: string; page: number; limit: number }) {
-        const previousPostIds = socketUsers[user_id].previous_post_ids.map((id) => new ObjectId(id))
+        const previousPostIds = socketUsers[user_id].previous_post_ids_news_feed.map((id) => new ObjectId(id))
         const [friends, total_posts] = await Promise.all([
             databaseService.friends
                 .find({
@@ -317,7 +324,8 @@ class PostService {
                         {
                             user_to_id: new ObjectId(user_id)
                         }
-                    ]
+                    ],
+                    status: FriendStatus.Accepted
                 })
                 .toArray(),
             databaseService.posts.countDocuments({
@@ -346,7 +354,7 @@ class PostService {
                     },
                     {
                         $sample: {
-                            size: isLastPage ? limit : Math.round((limit * 20) / 100)
+                            size: isLastPage ? limit : Math.round((limit * 30) / 100)
                         }
                     },
                     ...this.commonAggregatePosts(user_id)
@@ -379,7 +387,57 @@ class PostService {
             .concat(otherPosts)
             .sort((a, b) => new Date(b.created_at as Date).getTime() - new Date(a.created_at as Date).getTime())
 
-        socketUsers[user_id].previous_post_ids = socketUsers[user_id].previous_post_ids.concat(
+        socketUsers[user_id].previous_post_ids_news_feed = socketUsers[user_id].previous_post_ids_news_feed.concat(
+            posts.map(({ _id }) => (_id as ObjectId).toString())
+        )
+
+        return { posts, total_posts }
+    }
+
+    async getProfilePosts({
+        user_id,
+        profile_id,
+        page,
+        limit
+    }: {
+        user_id: string
+        profile_id: string
+        page: number
+        limit: number
+    }) {
+        const previousPostIds = socketUsers[user_id].previous_post_ids_profile.map((id) => new ObjectId(id))
+        const [result, total_posts] = await Promise.all([
+            databaseService.posts
+                .aggregate<{ post: Post }>([
+                    {
+                        $match: {
+                            _id: {
+                                $nin: previousPostIds
+                            },
+                            user_id: new ObjectId(profile_id)
+                        }
+                    },
+                    {
+                        $sort: {
+                            created_at: -1
+                        }
+                    },
+                    {
+                        $skip: (page - 1) * limit
+                    },
+                    {
+                        $limit: limit
+                    },
+                    ...this.commonAggregatePosts(profile_id)
+                ])
+                .toArray(),
+            databaseService.posts.countDocuments({
+                user_id: new ObjectId(profile_id)
+            })
+        ])
+        const posts = result.map(({ post }) => post)
+
+        socketUsers[user_id].previous_post_ids_profile = socketUsers[user_id].previous_post_ids_profile.concat(
             posts.map(({ _id }) => (_id as ObjectId).toString())
         )
 

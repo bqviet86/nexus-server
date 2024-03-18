@@ -34,6 +34,10 @@ export interface RefreshTokenReqBody {
     refresh_token: string
 }
 
+export interface GetProfileReqParams extends ParamsDictionary {
+    profile_id: string
+}
+
 export interface UpdateMeReqBody {
     name?: string
     email?: string
@@ -58,4 +62,12 @@ export interface ResponseFriendRequestReqParams extends ParamsDictionary {
 
 export interface ResponseFriendRequestReqBody {
     status: FriendStatus
+}
+
+export interface CancelFriendRequestReqParams extends ParamsDictionary {
+    user_id: string
+}
+
+export interface GetAllFriendsReqParams extends ParamsDictionary {
+    user_id: string
 }
