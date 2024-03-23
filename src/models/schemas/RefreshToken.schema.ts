@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 
-type RefreshTokenType = {
+type RefreshTokenConstructor = {
     _id?: ObjectId
     token: string
     user_id: ObjectId
@@ -17,7 +17,7 @@ export default class RefreshToken {
     exp: Date
     created_at: Date
 
-    constructor(refreshToken: RefreshTokenType) {
+    constructor(refreshToken: RefreshTokenConstructor) {
         this._id = refreshToken._id
         this.token = refreshToken.token
         this.user_id = refreshToken.user_id

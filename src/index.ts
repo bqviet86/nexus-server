@@ -11,6 +11,9 @@ import postsRouter from './routes/posts.routes'
 import notificationsRouter from './routes/notifications.routes'
 import commentsRouter from './routes/comments.routes'
 import likesRouter from './routes/likes.routes'
+import datingUsersRouter from './routes/datingUsers.routes'
+import datingCriteriasRouter from './routes/datingCriterias.routes'
+import provincesRouter from './routes/provinces.routes'
 import staticRouter from './routes/static.routes'
 import databaseService from '~/services/database.services'
 import { initFolder } from './utils/file'
@@ -45,6 +48,9 @@ app.use('/posts', postsRouter)
 app.use('/notifications', notificationsRouter)
 app.use('/comments', commentsRouter)
 app.use('/likes', likesRouter)
+app.use('/dating-users', datingUsersRouter)
+app.use('/dating-criterias', datingCriteriasRouter)
+app.use('/provinces', provincesRouter)
 app.use('/static', staticRouter)
 
 // Error handler

@@ -58,3 +58,11 @@ export enum FriendStatus {
     Accepted = 'accepted',
     Declined = 'declined'
 }
+
+export enum Language {
+    Vietnamese = 'Tiếng Việt',
+    English = 'Tiếng Anh',
+    Japanese = 'Tiếng Nhật',
+    French = 'Tiếng Pháp',
+    German = 'Tiếng Đức'
+}

@@ -21,6 +21,7 @@ type UserSocket = {
 
 export let io: Server
 export const socketUsers: Record<string, UserSocket> = {}
+export let socketDatingUsers: string[] = []
 
 const initSocket = (httpServer: ServerHttp) => {
     io = new Server(httpServer, {
@@ -68,7 +69,8 @@ const initSocket = (httpServer: ServerHttp) => {
                 user_id: userId,
                 ...socketUsers[userId],
                 previous_post_ids_news_feed: socketUsers[userId].previous_post_ids_news_feed.length,
-                previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length
+                previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length,
+                in_dating_room: socketDatingUsers.includes(userId)
             }))
         )
 
@@ -95,6 +97,7 @@ const initSocket = (httpServer: ServerHttp) => {
 
             if (reason === 'transport close' && !socketUsers[user_id].socket_ids.length) {
                 delete socketUsers[user_id]
+                socketDatingUsers = socketDatingUsers.filter((id) => id !== user_id)
             }
 
             console.log(
@@ -103,7 +106,8 @@ const initSocket = (httpServer: ServerHttp) => {
                     user_id: userId,
                     ...socketUsers[userId],
                     previous_post_ids_news_feed: socketUsers[userId].previous_post_ids_news_feed.length,
-                    previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length
+                    previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length,
+                    in_dating_room: socketDatingUsers.includes(userId)
                 }))
             )
         })
@@ -141,6 +145,34 @@ const initSocket = (httpServer: ServerHttp) => {
                 }, 300)
             }
         )
+
+        socket.on('join_dating_room', async () => {
+            socketDatingUsers.push(user_id)
+
+            await delayExecution(() => {
+                Object.keys(socketUsers)
+                    .filter((userId) => socketDatingUsers.includes(userId))
+                    .forEach((userId) => {
+                        socketUsers[userId].socket_ids.forEach((socket_id) =>
+                            io.to(socket_id).emit('dating_room_updated', socketDatingUsers.length)
+                        )
+                    })
+            }, 300)
+        })
+
+        socket.on('leave_dating_room', async () => {
+            socketDatingUsers = socketDatingUsers.filter((id) => id !== user_id)
+
+            await delayExecution(() => {
+                Object.keys(socketUsers)
+                    .filter((userId) => socketDatingUsers.includes(userId))
+                    .forEach((userId) => {
+                        socketUsers[userId].socket_ids.forEach((socket_id) =>
+                            io.to(socket_id).emit('dating_room_updated', socketDatingUsers.length)
+                        )
+                    })
+            }, 300)
+        })
     })
 }
 

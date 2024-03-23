@@ -1,6 +1,7 @@
 export const COMMON_MESSAGES = {
     INVALID_POST_ID: 'ID post không hợp lệ',
-    POST_NOT_FOUND: 'Không tìm thấy post'
+    POST_NOT_FOUND: 'Không tìm thấy post',
+    DATING_PROFILE_NOT_FOUND: 'Không tìm thấy hồ sơ hẹn hò'
 }
 
 export const USERS_MESSAGES = {
@@ -135,4 +136,39 @@ export const COMMENTS_MESSAGES = {
 export const LIKES_MESSAGES = {
     LIKE_POST_SUCCESSFULLY: 'Like post thành công',
     UNLIKE_POST_SUCCESSFULLY: 'Unlike post thành công'
+}
+
+export const DATING_USERS_MESSAGES = {
+    ID_IS_INVALID: 'ID không hợp lệ',
+    DATING_PROFILE_NOT_FOUND: 'Không tìm thấy hồ sơ hẹn hò',
+    CHECK_ID_IS_INVALID: 'Check ID không hợp lệ',
+    NAME_IS_REQUIRED: 'Tên không được để trống',
+    NAME_MUST_BE_A_STRING: 'Tên phải là một chuỗi',
+    NAME_LENGTH_MUST_BE_FROM_1_TO_100: 'Tên phải có độ dài từ 1 đến 100 ký tự',
+    SEX_IS_INVALID: 'Giới tính không hợp lệ',
+    HOMETOWN_IS_REQUIRED: 'Quê quán không được để trống',
+    HOMETOWN_MUST_BE_A_STRING: 'Quê quán phải là một chuỗi',
+    HOMETOWN_LENGTH_MUST_BE_FROM_1_TO_100: 'Quê quán phải có độ dài từ 1 đến 100 ký tự',
+    LANGUAGE_IS_INVALID: 'Ngôn ngữ không hợp lệ',
+
+    GET_DATING_PROFILE_SUCCESSFULLY: 'Lấy hồ sơ hẹn hò thành công',
+    CREATE_DATING_PROFILE_SUCCESSFULLY: 'Tạo hồ sơ hẹn hò thành công',
+    UPDATE_DATING_PROFILE_SUCCESSFULLY: 'Cập nhật hồ sơ hẹn hò thành công'
+}
+
+export const DATING_CRITERIAS_MESSAGES = {
+    SEX_IS_INVALID: 'Giới tính không hợp lệ',
+    AGE_RANGE_MUST_BE_AN_ARRAY: 'Khoảng tuổi phải là một mảng',
+    AGE_RANGE_MUST_HAVE_2_ELEMENTS: 'Khoảng tuổi phải có 2 phần tử',
+    AGE_RANGE_MUST_BE_FROM_18_TO_65: 'Khoảng tuổi phải từ 18 đến 65',
+    HEIGHT_RANGE_MUST_BE_AN_ARRAY: 'Khoảng chiều cao phải là một mảng',
+    HEIGHT_RANGE_MUST_HAVE_2_ELEMENTS: 'Khoảng chiều cao phải có 2 phần tử',
+    HEIGHT_RANGE_MUST_BE_FROM_140_TO_220: 'Khoảng chiều cao phải từ 140 đến 220',
+    HOMETOWN_MUST_BE_A_STRING: 'Quê quán phải là một chuỗi',
+    HOMETOWN_LENGTH_MUST_BE_FROM_1_TO_100: 'Quê quán phải có độ dài từ 1 đến 100 ký tự',
+    LANGUAGE_IS_INVALID: 'Ngôn ngữ không hợp lệ',
+
+    GET_DATING_CRITERIA_SUCCESSFULLY: 'Lấy tiêu chí hẹn hò thành công',
+    CREATE_DATING_CRITERIA_SUCCESSFULLY: 'Tạo tiêu chí hẹn hò thành công',
+    UPDATE_DATING_CRITERIA_SUCCESSFULLY: 'Cập nhật tiêu chí hẹn hò thành công'
 }

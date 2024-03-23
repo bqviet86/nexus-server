@@ -6,6 +6,7 @@ import { pick } from 'lodash'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { COMMON_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
+import { TokenPayload } from '~/models/requests/User.requests'
 import databaseService from '~/services/database.services'
 import { validate } from '~/utils/validation'
 
@@ -64,6 +65,24 @@ export const paginationValidator = validate(
         ['query']
     )
 )
+
+export const checkDatingProfileExistence = async (req: Request, res: Response, next: NextFunction) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const datingProfile = await databaseService.datingUsers.findOne({
+        user_id: new ObjectId(user_id)
+    })
+
+    if (datingProfile === null) {
+        throw new ErrorWithStatus({
+            message: COMMON_MESSAGES.DATING_PROFILE_NOT_FOUND,
+            status: HTTP_STATUS.NOT_FOUND
+        })
+    }
+
+    ;(req as Request).dating_profile = datingProfile
+
+    next()
+}
 
 // Schemas
 export const postIdSchema: ParamSchema = {

@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 
 import { UserRole, Sex } from '~/constants/enums'
 
-interface UserType {
+interface UserConstructor {
     _id?: ObjectId
     name: string
     email: string
@@ -29,7 +29,7 @@ export default class User {
     created_at: Date
     updated_at: Date
 
-    constructor(user: UserType) {
+    constructor(user: UserConstructor) {
         const date = new Date()
 
         this._id = user._id

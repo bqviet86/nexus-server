@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 
 import { VideoEncodingStatus } from '~/constants/enums'
 
-interface VideoStatusType {
+interface VideoStatusConstructor {
     _id?: ObjectId
     name: string
     status: VideoEncodingStatus
@@ -17,7 +17,7 @@ export default class VideoStatus {
     created_at: Date
     updated_at: Date
 
-    constructor(videoStatus: VideoStatusType) {
+    constructor(videoStatus: VideoStatusConstructor) {
         const date = new Date()
 
         this._id = videoStatus._id
