@@ -66,3 +66,46 @@ export enum Language {
     French = 'Tiếng Pháp',
     German = 'Tiếng Đức'
 }
+
+export enum MBTIDimension {
+    EI = 'E-I',
+    SN = 'S-N',
+    TF = 'T-F',
+    JP = 'J-P'
+}
+
+export enum MBTIValue {
+    E = 'E',
+    I = 'I',
+    S = 'S',
+    N = 'N',
+    T = 'T',
+    F = 'F',
+    J = 'J',
+    P = 'P'
+}
+
+export enum MBTIType {
+    ESTJ = 'ESTJ',
+    ESTP = 'ESTP',
+    ESFJ = 'ESFJ',
+    ESFP = 'ESFP',
+    ENTJ = 'ENTJ',
+    ENTP = 'ENTP',
+    ENFJ = 'ENFJ',
+    ENFP = 'ENFP',
+    ISTJ = 'ISTJ',
+    ISTP = 'ISTP',
+    ISFJ = 'ISFJ',
+    ISFP = 'ISFP',
+    INTJ = 'INTJ',
+    INTP = 'INTP',
+    INFJ = 'INFJ',
+    INFP = 'INFP'
+}
+
+export enum MBTITestStatus {
+    Pending = 'pending',
+    Processing = 'processing',
+    Completed = 'completed'
+}

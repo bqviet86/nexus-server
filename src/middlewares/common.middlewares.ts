@@ -4,10 +4,13 @@ import { ObjectId } from 'mongodb'
 import { pick } from 'lodash'
 
 import HTTP_STATUS from '~/constants/httpStatus'
-import { COMMON_MESSAGES } from '~/constants/messages'
+import { COMMON_MESSAGES, MBTI_TEST_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
 import { TokenPayload } from '~/models/requests/User.requests'
+import DatingUser from '~/models/schemas/DatingUser.schema'
+import MBTITest from '~/models/schemas/MBTITest.schema'
 import databaseService from '~/services/database.services'
+import mbtiTestService from '~/services/mbtiTests.services'
 import { validate } from '~/utils/validation'
 
 type FilterKeys<T> = Array<keyof T>
@@ -73,16 +76,108 @@ export const checkDatingProfileExistence = async (req: Request, res: Response, n
     })
 
     if (datingProfile === null) {
-        throw new ErrorWithStatus({
-            message: COMMON_MESSAGES.DATING_PROFILE_NOT_FOUND,
-            status: HTTP_STATUS.NOT_FOUND
-        })
+        return next(
+            new ErrorWithStatus({
+                message: COMMON_MESSAGES.DATING_PROFILE_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND
+            })
+        )
     }
 
     ;(req as Request).dating_profile = datingProfile
 
     next()
 }
+
+export const MBTITestIdValidator = validate(
+    checkSchema(
+        {
+            mbti_test_id: {
+                trim: true,
+                custom: {
+                    options: async (value: string, { req }) => {
+                        if (!ObjectId.isValid(value)) {
+                            throw new ErrorWithStatus({
+                                message: MBTI_TEST_MESSAGES.INVALID_MBTI_TEST_ID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const dating_profile = (req as Request).dating_profile as DatingUser
+                        const [mbtiTest] = await databaseService.mbtiTests
+                            .aggregate<MBTITest>(
+                                mbtiTestService.commonAggregateMBTITest({
+                                    mbti_test_id: value,
+                                    dating_profile_id: (dating_profile._id as ObjectId).toString()
+                                })
+                            )
+                            .toArray()
+
+                        if (mbtiTest === undefined) {
+                            throw new ErrorWithStatus({
+                                message: MBTI_TEST_MESSAGES.MBTI_TEST_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        ;(req as Request).mbti_test = mbtiTest
+
+                        return true
+                    }
+                }
+            }
+        },
+        ['params']
+    )
+)
+
+export const questionIdMBTITestValidator = validate(
+    checkSchema(
+        {
+            question_id: {
+                trim: true,
+                custom: {
+                    options: async (value: string, { req }) => {
+                        if (!ObjectId.isValid(value)) {
+                            throw new ErrorWithStatus({
+                                message: MBTI_TEST_MESSAGES.QUESTION_ID_INVALID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const mbtiQuestion = await databaseService.mbtiQuestions.findOne({
+                            _id: new ObjectId(value)
+                        })
+
+                        if (mbtiQuestion === null) {
+                            throw new ErrorWithStatus({
+                                message: MBTI_TEST_MESSAGES.QUESTION_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        const mbti_test = (req as Request).mbti_test as MBTITest
+                        const isQuestionExist = mbti_test.answers
+                            .map((answer) => (answer as any).question._id.toString())
+                            .includes(value)
+
+                        if (!isQuestionExist) {
+                            throw new ErrorWithStatus({
+                                message: MBTI_TEST_MESSAGES.QUESTION_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        ;(req as Request).mbti_question = mbtiQuestion
+
+                        return true
+                    }
+                }
+            }
+        },
+        ['body']
+    )
+)
 
 // Schemas
 export const postIdSchema: ParamSchema = {

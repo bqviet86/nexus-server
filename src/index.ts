@@ -14,6 +14,8 @@ import likesRouter from './routes/likes.routes'
 import datingUsersRouter from './routes/datingUsers.routes'
 import datingCriteriasRouter from './routes/datingCriterias.routes'
 import provincesRouter from './routes/provinces.routes'
+import mbtiQuestionsRouter from './routes/mbtiQuestions.routes'
+import mbtiTestsRouter from './routes/mbtiTests.routes'
 import staticRouter from './routes/static.routes'
 import databaseService from '~/services/database.services'
 import { initFolder } from './utils/file'
@@ -51,6 +53,8 @@ app.use('/likes', likesRouter)
 app.use('/dating-users', datingUsersRouter)
 app.use('/dating-criterias', datingCriteriasRouter)
 app.use('/provinces', provincesRouter)
+app.use('/mbti-questions', mbtiQuestionsRouter)
+app.use('/mbti-tests', mbtiTestsRouter)
 app.use('/static', staticRouter)
 
 // Error handler

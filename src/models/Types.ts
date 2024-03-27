@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 
-import { MediaTypes, NotificationFriendAction, NotificationPostAction } from '~/constants/enums'
+import { MBTIValue, MediaTypes, NotificationFriendAction, NotificationPostAction } from '~/constants/enums'
 
 export type Media = {
     url: string
@@ -18,3 +18,13 @@ export type NotificationFriendPayload = {
 }
 
 export type NotificationPayload = Partial<NotificationPostPayload & NotificationFriendPayload>
+
+export type MBTIOption = {
+    option: string
+    dimension_value: MBTIValue
+}
+
+export type MBTIAnswer = {
+    question_id: ObjectId
+    answer: MBTIValue | ''
+}

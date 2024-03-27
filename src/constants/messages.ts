@@ -1,3 +1,6 @@
+import { MBTIValue } from './enums'
+import { stringEnumToArray } from '~/utils/commons'
+
 export const COMMON_MESSAGES = {
     INVALID_POST_ID: 'ID post không hợp lệ',
     POST_NOT_FOUND: 'Không tìm thấy post',
@@ -171,4 +174,23 @@ export const DATING_CRITERIAS_MESSAGES = {
     GET_DATING_CRITERIA_SUCCESSFULLY: 'Lấy tiêu chí hẹn hò thành công',
     CREATE_DATING_CRITERIA_SUCCESSFULLY: 'Tạo tiêu chí hẹn hò thành công',
     UPDATE_DATING_CRITERIA_SUCCESSFULLY: 'Cập nhật tiêu chí hẹn hò thành công'
+}
+
+export const MBTI_TEST_MESSAGES = {
+    INVALID_MBTI_TEST_ID: 'ID bài trắc nghiệm MBTI không hợp lệ',
+    MBTI_TEST_NOT_FOUND: 'Không tìm thấy bài trắc nghiệm MBTI',
+    QUESTION_ID_INVALID: 'ID câu hỏi không hợp lệ',
+    QUESTION_NOT_FOUND: 'Không tìm thấy câu hỏi',
+    ANSWER_MUST_BE_STRING: 'Câu trả lời phải là một chuỗi',
+    ANSWER_MUST_BE_IN_VALUES: `Answer phải thuộc một trong các giá trị: ${stringEnumToArray(MBTIValue).join(', ')}`,
+    ANSWER_INVALID: 'Câu trả lời không hợp lệ',
+    ANSWER_NOT_MATCH_DIMENSION: 'Câu trả lời không khớp với chiều của câu hỏi',
+    MBTI_TEST_NOT_COMPLETED: 'Bài trắc nghiệm MBTI chưa hoàn thành',
+
+    CREATE_MBTI_TEST_SUCCESS: 'Tạo bài trắc nghiệm MBTI thành công',
+    GET_MBTI_TEST_SUCCESS: 'Lấy bài trắc nghiệm MBTI thành công',
+    GET_ALL_MBTI_TESTS_SUCCESS: 'Lấy tất cả bài trắc nghiệm MBTI thành công',
+    UPDATE_ANSWER_MBTI_TEST_SUCCESS: 'Cập nhật câu trả lời bài trắc nghiệm MBTI thành công',
+    COMPLETE_MBTI_TEST_SUCCESS: 'Hoàn thành bài trắc nghiệm MBTI thành công',
+    DELETE_MBTI_TEST_SUCCESS: 'Xóa bài trắc nghiệm MBTI thành công'
 }

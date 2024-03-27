@@ -13,6 +13,8 @@ import Like from '~/models/schemas/Like.schema'
 import DatingUser from '~/models/schemas/DatingUser.schema'
 import DatingCriteria from '~/models/schemas/DatingCriteria.schema'
 import Province from '~/models/schemas/Province.schema'
+import MBTIQuestion from '~/models/schemas/MBTIQuestion.schema'
+import MBTITest from '~/models/schemas/MBTITest.schema'
 
 config()
 
@@ -82,6 +84,14 @@ class DatabaseService {
 
     get provinces(): Collection<Province> {
         return this.db.collection(process.env.DB_PROVINCES_COLLECTION as string)
+    }
+
+    get mbtiQuestions(): Collection<MBTIQuestion> {
+        return this.db.collection(process.env.DB_MBTI_QUESTIONS_COLLECTION as string)
+    }
+
+    get mbtiTests(): Collection<MBTITest> {
+        return this.db.collection(process.env.DB_MBTI_TESTS_COLLECTION as string)
     }
 }
 

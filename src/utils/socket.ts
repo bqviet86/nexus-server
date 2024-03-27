@@ -49,6 +49,37 @@ const initSocket = (httpServer: ServerHttp) => {
         }
     })
 
+    const logSocketUsers = () => {
+        console.log(
+            '------------------------------------\n',
+            'socketUsers',
+            Object.keys(socketUsers).map((userId) => ({
+                user_id: userId,
+                ...socketUsers[userId],
+                previous_post_ids_news_feed: socketUsers[userId].previous_post_ids_news_feed.length,
+                previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length,
+                in_dating_room: socketDatingUsers.includes(userId)
+            }))
+        )
+    }
+
+    const deleteSocketUser = (user_id: string) => {
+        delete socketUsers[user_id]
+        socketDatingUsers = socketDatingUsers.filter((id) => id !== user_id)
+    }
+
+    const updateDatingRoom = async () => {
+        await delayExecution(() => {
+            Object.keys(socketUsers)
+                .filter((userId) => socketDatingUsers.includes(userId))
+                .forEach((userId) => {
+                    socketUsers[userId].socket_ids.forEach((socket_id) =>
+                        io.to(socket_id).emit('dating_room_updated', socketDatingUsers.length)
+                    )
+                })
+        }, 300)
+    }
+
     io.on('connection', (socket) => {
         const { id: socketId } = socket
         const { user_id } = socket.handshake.auth.decoded_authorization as TokenPayload
@@ -63,16 +94,7 @@ const initSocket = (httpServer: ServerHttp) => {
             }
         }
 
-        console.log(
-            'socketUsers',
-            Object.keys(socketUsers).map((userId) => ({
-                user_id: userId,
-                ...socketUsers[userId],
-                previous_post_ids_news_feed: socketUsers[userId].previous_post_ids_news_feed.length,
-                previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length,
-                in_dating_room: socketDatingUsers.includes(userId)
-            }))
-        )
+        logSocketUsers()
 
         socket.use(async (_, next) => {
             const access_token = socket.handshake.auth.access_token as string
@@ -92,31 +114,21 @@ const initSocket = (httpServer: ServerHttp) => {
             }
         })
 
-        socket.on('disconnect', (reason) => {
+        socket.on('disconnect', async (reason) => {
             socketUsers[user_id].socket_ids = socketUsers[user_id].socket_ids.filter((id) => id !== socketId)
 
-            if (reason === 'transport close' && !socketUsers[user_id].socket_ids.length) {
-                delete socketUsers[user_id]
-                socketDatingUsers = socketDatingUsers.filter((id) => id !== user_id)
+            if (reason !== 'client namespace disconnect' && !socketUsers[user_id].socket_ids.length) {
+                deleteSocketUser(user_id)
+                await updateDatingRoom()
             }
 
-            console.log(
-                'socketUsers',
-                Object.keys(socketUsers).map((userId) => ({
-                    user_id: userId,
-                    ...socketUsers[userId],
-                    previous_post_ids_news_feed: socketUsers[userId].previous_post_ids_news_feed.length,
-                    previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length,
-                    in_dating_room: socketDatingUsers.includes(userId)
-                }))
-            )
+            logSocketUsers()
         })
 
         socket.on(
             'create_comment',
             async (data: Pick<Comment, 'content' | 'media'> & { post_id: string; parent_id: string | null }) => {
                 const { user_id } = socket.handshake.auth.decoded_authorization as TokenPayload
-
                 const [comment, post] = await Promise.all([
                     commentService.createComment({
                         ...data,
@@ -146,32 +158,25 @@ const initSocket = (httpServer: ServerHttp) => {
             }
         )
 
+        socket.on('get_dating_room_online_amount', async () => {
+            await delayExecution(() => {
+                socketUsers[user_id].socket_ids.forEach((socket_id) =>
+                    io.to(socket_id).emit('dating_room_updated', socketDatingUsers.length)
+                )
+            }, 300)
+            logSocketUsers()
+        })
+
         socket.on('join_dating_room', async () => {
             socketDatingUsers.push(user_id)
-
-            await delayExecution(() => {
-                Object.keys(socketUsers)
-                    .filter((userId) => socketDatingUsers.includes(userId))
-                    .forEach((userId) => {
-                        socketUsers[userId].socket_ids.forEach((socket_id) =>
-                            io.to(socket_id).emit('dating_room_updated', socketDatingUsers.length)
-                        )
-                    })
-            }, 300)
+            await updateDatingRoom()
+            logSocketUsers()
         })
 
         socket.on('leave_dating_room', async () => {
             socketDatingUsers = socketDatingUsers.filter((id) => id !== user_id)
-
-            await delayExecution(() => {
-                Object.keys(socketUsers)
-                    .filter((userId) => socketDatingUsers.includes(userId))
-                    .forEach((userId) => {
-                        socketUsers[userId].socket_ids.forEach((socket_id) =>
-                            io.to(socket_id).emit('dating_room_updated', socketDatingUsers.length)
-                        )
-                    })
-            }, 300)
+            await updateDatingRoom()
+            logSocketUsers()
         })
     })
 }
