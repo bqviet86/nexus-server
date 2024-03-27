@@ -158,24 +158,17 @@ const initSocket = (httpServer: ServerHttp) => {
             }
         )
 
-        socket.on('get_dating_room_online_amount', async () => {
-            await delayExecution(() => {
-                socketUsers[user_id].socket_ids.forEach((socket_id) =>
-                    io.to(socket_id).emit('dating_room_updated', socketDatingUsers.length)
-                )
-            }, 300)
-            logSocketUsers()
-        })
-
         socket.on('join_dating_room', async () => {
             socketDatingUsers.push(user_id)
             await updateDatingRoom()
+            console.log('join_dating_room', user_id)
             logSocketUsers()
         })
 
         socket.on('leave_dating_room', async () => {
             socketDatingUsers = socketDatingUsers.filter((id) => id !== user_id)
             await updateDatingRoom()
+            console.log('leave_dating_room', user_id)
             logSocketUsers()
         })
     })

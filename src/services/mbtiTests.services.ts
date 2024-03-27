@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb'
+import { Document, ObjectId } from 'mongodb'
 import { shuffle } from 'lodash'
 
 import { MBTIDimension, MBTITestStatus, MBTIType, MBTIValue } from '~/constants/enums'
@@ -9,7 +9,13 @@ import MBTIQuestion from '~/models/schemas/MBTIQuestion.schema'
 import databaseService from './database.services'
 
 class MBTITestService {
-    commonAggregateMBTITest({ mbti_test_id, dating_profile_id }: { mbti_test_id?: string; dating_profile_id: string }) {
+    commonAggregateMBTITest({
+        mbti_test_id,
+        dating_profile_id
+    }: {
+        mbti_test_id?: string
+        dating_profile_id: string
+    }): Document[] {
         return [
             {
                 $match: {

@@ -8,11 +8,10 @@ import {
     UpdateDatingProfileReqBody
 } from '~/models/requests/DatingUser.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
-import DatingUser from '~/models/schemas/DatingUser.schema'
 import datingUserService from '~/services/datingUsers.services'
 
 export const getDatingProfileController = async (req: Request<GetDatingProfileReqParams>, res: Response) => {
-    const dating_profile = req.dating_profile as DatingUser
+    const dating_profile = req.dating_profile || null
 
     return res.json({
         message: DATING_USERS_MESSAGES.GET_DATING_PROFILE_SUCCESSFULLY,

@@ -6,7 +6,9 @@ import { Language, Sex } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { DATING_USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
+import DatingUser from '~/models/schemas/DatingUser.schema'
 import databaseService from '~/services/database.services'
+import datingUserService from '~/services/datingUsers.services'
 import { stringEnumToArray } from '~/utils/commons'
 import { validate } from '~/utils/validation'
 
@@ -94,25 +96,18 @@ export const getDatingProfileValidator = validate(
                         }
 
                         const checkId = (req as Request).query.checkId as 'user_id' | 'dating_user_id'
-                        const datingProfile = await databaseService.datingUsers.findOne(
-                            {
-                                ...(checkId === 'user_id'
-                                    ? { user_id: new ObjectId(value) }
-                                    : { _id: new ObjectId(value) })
-                            },
-                            {
-                                projection: {
-                                    user_id: 0
-                                }
-                            }
-                        )
-
-                        if (datingProfile === null) {
-                            throw new ErrorWithStatus({
-                                message: DATING_USERS_MESSAGES.DATING_PROFILE_NOT_FOUND,
-                                status: HTTP_STATUS.NOT_FOUND
-                            })
-                        }
+                        const [datingProfile] = await databaseService.datingUsers
+                            .aggregate<DatingUser>([
+                                {
+                                    $match: {
+                                        ...(checkId === 'user_id'
+                                            ? { user_id: new ObjectId(value) }
+                                            : { _id: new ObjectId(value) })
+                                    }
+                                },
+                                ...datingUserService.commonAggregateDatingUsers()
+                            ])
+                            .toArray()
 
                         ;(req as Request).dating_profile = datingProfile
 

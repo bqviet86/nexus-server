@@ -5,7 +5,7 @@ import {
     getDatingProfileController,
     updateDatingProfileController
 } from '~/controllers/datingUsers.controllers'
-import { filterMiddleware } from '~/middlewares/common.middlewares'
+import { checkDatingProfileExistence, filterMiddleware } from '~/middlewares/common.middlewares'
 import {
     createDatingProfileValidator,
     getDatingProfileValidator,
@@ -56,6 +56,7 @@ datingUsersRouter.post(
 datingUsersRouter.patch(
     '/',
     accessTokenValidator,
+    checkDatingProfileExistence,
     updateDatingProfileValidator,
     filterMiddleware<UpdateDatingProfileReqBody>(['name', 'sex', 'age', 'height', 'hometown', 'language']),
     wrapRequestHandler(updateDatingProfileController)
