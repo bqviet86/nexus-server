@@ -3,13 +3,19 @@ import { Server } from 'socket.io'
 import { ExtendedError } from 'socket.io/dist/namespace'
 import { ObjectId } from 'mongodb'
 
-import { NotificationPostAction, NotificationType } from '~/constants/enums'
+import { MBTIType, NotificationPostAction, NotificationType } from '~/constants/enums'
+import { CRITERIA_PASS_SCORE, CRITERIA_SCORES, MBTI_COMPATIBILITY_SCORES } from '~/constants/scores'
+import MBTI_COMPATIBILITY from '~/constants/mbtiCompatibility'
 import { TokenPayload } from '~/models/requests/User.requests'
 import Comment from '~/models/schemas/Comment.schema'
 import Post from '~/models/schemas/Post.schema'
+import DatingUser from '~/models/schemas/DatingUser.schema'
+import DatingCriteria from '~/models/schemas/DatingCriteria.schema'
+import DatingCall from '~/models/schemas/DatingCall.schema'
 import commentService from '~/services/comments.services'
 import notificationService from '~/services/notifications.services'
 import databaseService from '~/services/database.services'
+import datingUserService from '~/services/datingUsers.services'
 import { verifyAccessToken } from './commons'
 import { delayExecution } from './handlers'
 
@@ -22,6 +28,11 @@ type UserSocket = {
 export let io: Server
 export const socketUsers: Record<string, UserSocket> = {}
 export let socketDatingUsers: string[] = []
+export let socketDatingCallUsers: {
+    user_id: string
+    calling_user_id: string
+    is_calculating: boolean
+}[] = []
 
 const initSocket = (httpServer: ServerHttp) => {
     io = new Server(httpServer, {
@@ -58,7 +69,8 @@ const initSocket = (httpServer: ServerHttp) => {
                 ...socketUsers[userId],
                 previous_post_ids_news_feed: socketUsers[userId].previous_post_ids_news_feed.length,
                 previous_post_ids_profile: socketUsers[userId].previous_post_ids_profile.length,
-                in_dating_room: socketDatingUsers.includes(userId)
+                in_dating_room: socketDatingUsers.includes(userId),
+                in_call: socketDatingCallUsers.map((userCall) => userCall.user_id).includes(userId)
             }))
         )
     }
@@ -78,6 +90,37 @@ const initSocket = (httpServer: ServerHttp) => {
                     )
                 })
         }, 300)
+    }
+
+    const getDatingCallUser = (user_id: string) => {
+        const index = socketDatingCallUsers.findIndex((userCall) => userCall.user_id === user_id)
+        return index !== -1 ? socketDatingCallUsers[index] : null
+    }
+
+    const calculateCriteriaScore = (profile: DatingUser, criteria: DatingCriteria) => {
+        let score: number = 0
+
+        if (profile.sex === criteria.sex) {
+            score += CRITERIA_SCORES.Sex
+        }
+
+        if (profile.age >= criteria.age_range[0] && profile.age <= criteria.age_range[1]) {
+            score += CRITERIA_SCORES.Age
+        }
+
+        if (profile.height >= criteria.height_range[0] && profile.height <= criteria.height_range[1]) {
+            score += CRITERIA_SCORES.Height
+        }
+
+        if (profile.hometown === criteria.hometown) {
+            score += CRITERIA_SCORES.Hometown
+        }
+
+        if (profile.language === criteria.language) {
+            score += CRITERIA_SCORES.Language
+        }
+
+        return score
     }
 
     io.on('connection', (socket) => {
@@ -159,7 +202,10 @@ const initSocket = (httpServer: ServerHttp) => {
         )
 
         socket.on('join_dating_room', async () => {
-            socketDatingUsers.push(user_id)
+            if (!socketDatingUsers.includes(user_id)) {
+                socketDatingUsers.push(user_id)
+            }
+
             await updateDatingRoom()
             console.log('join_dating_room', user_id)
             logSocketUsers()
@@ -170,6 +216,314 @@ const initSocket = (httpServer: ServerHttp) => {
             await updateDatingRoom()
             console.log('leave_dating_room', user_id)
             logSocketUsers()
+        })
+
+        socket.on('find_call_user', async ({ user_id: my_id }: { user_id: string }) => {
+            const userIds = socketDatingCallUsers.map((userCall) => userCall.user_id)
+
+            // If the queue is empty, emit an event to the caller to notify
+            if (userIds.length === 0) {
+                socket.emit('call_user_queue_empty')
+            }
+
+            // Add the user to the queue if the user is not in the queue
+            if (!userIds.includes(my_id)) {
+                socketDatingCallUsers.push({
+                    user_id: my_id,
+                    calling_user_id: '',
+                    is_calculating: false
+                })
+            }
+
+            const [[myProfile], [{ criteria: myCriteria }]] = await Promise.all([
+                databaseService.datingUsers
+                    .aggregate<DatingUser>([
+                        {
+                            $match: {
+                                user_id: new ObjectId(my_id)
+                            }
+                        },
+                        ...datingUserService.commonAggregateDatingUsers(true)
+                    ])
+                    .toArray(),
+                databaseService.datingUsers
+                    .aggregate<{ criteria: DatingCriteria }>([
+                        {
+                            $match: {
+                                user_id: new ObjectId(my_id)
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: 'dating_criterias',
+                                localField: '_id',
+                                foreignField: 'dating_user_id',
+                                as: 'criteria'
+                            }
+                        },
+                        {
+                            $unwind: {
+                                path: '$criteria'
+                            }
+                        },
+                        {
+                            $project: {
+                                criteria: 1
+                            }
+                        }
+                    ])
+                    .toArray()
+            ])
+
+            let count = 0
+            let isMatched = false
+            let me = getDatingCallUser(my_id)
+
+            while (count < 3 && !isMatched && me && !me.calling_user_id && !me.is_calculating) {
+                isMatched = await delayExecution(async () => {
+                    console.log(my_id, 'executing')
+                    count++
+
+                    const me = getDatingCallUser(my_id)
+                    if (!me) return false
+                    me.is_calculating = true
+
+                    const userIds = socketDatingCallUsers
+                        .filter(
+                            ({ user_id, calling_user_id, is_calculating }) =>
+                                user_id !== my_id && !calling_user_id && !is_calculating
+                        )
+                        .map((userCall) => new ObjectId(userCall.user_id))
+
+                    if (!userIds.length) {
+                        const me = getDatingCallUser(my_id)
+                        me && (me.is_calculating = false)
+                        return false
+                    }
+
+                    const [userProfiles, criterias] = await Promise.all([
+                        databaseService.datingUsers
+                            .aggregate<DatingUser>([
+                                {
+                                    $match: {
+                                        user_id: {
+                                            $in: userIds
+                                        }
+                                    }
+                                },
+                                ...datingUserService.commonAggregateDatingUsers(true)
+                            ])
+                            .toArray(),
+                        databaseService.datingUsers
+                            .aggregate<{ criteria: DatingCriteria }>([
+                                {
+                                    $match: {
+                                        user_id: {
+                                            $in: userIds
+                                        }
+                                    }
+                                },
+                                {
+                                    $lookup: {
+                                        from: 'dating_criterias',
+                                        localField: '_id',
+                                        foreignField: 'dating_user_id',
+                                        as: 'criteria'
+                                    }
+                                },
+                                {
+                                    $unwind: {
+                                        path: '$criteria'
+                                    }
+                                },
+                                {
+                                    $project: {
+                                        criteria: 1
+                                    }
+                                }
+                            ])
+                            .toArray()
+                    ])
+                    const userCriterias = criterias.map(({ criteria }) => criteria)
+                    const scores: Record<
+                        string,
+                        { user_score: number; my_score: number; mbti_score: number | null; total_score: number }
+                    > = {}
+
+                    userProfiles.forEach((userProfile, index) => {
+                        const user_score = calculateCriteriaScore(userProfile, myCriteria)
+                        const my_score = calculateCriteriaScore(myProfile, userCriterias[index])
+                        const myMBTIType = (myProfile as any).mbti_type as MBTIType
+                        const userMBTIType = (userProfile as any).mbti_type as MBTIType
+                        const mbti_score =
+                            myMBTIType && userMBTIType
+                                ? MBTI_COMPATIBILITY_SCORES[MBTI_COMPATIBILITY[myMBTIType][userMBTIType]]
+                                : null
+
+                        scores[userProfile.user_id.toString()] = {
+                            user_score,
+                            my_score,
+                            mbti_score,
+                            total_score: user_score + my_score + (mbti_score ?? 0)
+                        }
+                    })
+
+                    console.log('scores', scores)
+
+                    const userProfilesMatched = userProfiles.filter((userProfile) => {
+                        const userId = userProfile.user_id.toString()
+
+                        if (
+                            scores[userId].user_score >= CRITERIA_PASS_SCORE &&
+                            scores[userId].my_score >= CRITERIA_PASS_SCORE
+                        ) {
+                            return true
+                        }
+
+                        delete scores[userId]
+                        return false
+                    })
+
+                    if (!userProfilesMatched.length) {
+                        const me = getDatingCallUser(my_id)
+                        me && (me.is_calculating = false)
+                        return false
+                    }
+
+                    // Sort the user profiles by total score
+                    userProfilesMatched.sort(
+                        (a, b) => scores[b.user_id.toString()].total_score - scores[a.user_id.toString()].total_score
+                    )
+
+                    let userToCall: DatingUser | null = null
+
+                    for (const userProfile of userProfilesMatched) {
+                        const userId = userProfile.user_id.toString()
+                        const me = getDatingCallUser(my_id)
+                        const user = getDatingCallUser(userId)
+
+                        if (!me) {
+                            return false
+                        }
+
+                        if (me.calling_user_id) {
+                            break
+                        }
+
+                        if (!user || user.calling_user_id || user.is_calculating) {
+                            continue
+                        }
+
+                        me.calling_user_id = userId
+                        me.is_calculating = false
+                        user.calling_user_id = my_id
+                        user.is_calculating = false
+                        userToCall = userProfile
+
+                        socketUsers[my_id].socket_ids.forEach((socket_id) =>
+                            io.to(socket_id).emit('find_call_user', {
+                                my_profile: myProfile,
+                                user_profile: userProfile
+                            })
+                        )
+                    }
+
+                    return userToCall ? true : false
+                }, 10000)
+
+                me = getDatingCallUser(my_id)
+            }
+
+            if (count >= 3 && !isMatched) {
+                socket.emit('call_timeout')
+            }
+
+            console.log('find_call_user', my_id)
+            console.log('socketDatingCallUsers', socketDatingCallUsers)
+        })
+
+        socket.on(
+            'call_user',
+            async ({ user_from, user_to, signalData }: { user_from: DatingUser; user_to: string; signalData: any }) => {
+                socketUsers[user_to].socket_ids.forEach((socket_id) =>
+                    io.to(socket_id).emit('call_user', { user_from, signalData })
+                )
+
+                console.log('call_user', user_from.user_id.toString(), user_to)
+                console.log('socketDatingCallUsers', socketDatingCallUsers)
+            }
+        )
+
+        socket.on('call_accepted', async ({ user_to, signalData }: { user_to: string; signalData: any }) => {
+            socketUsers[user_to].socket_ids.forEach((socket_id) => io.to(socket_id).emit('call_accepted', signalData))
+
+            console.log('call_accepted', user_id, user_to)
+            console.log('socketDatingCallUsers', socketDatingCallUsers)
+        })
+
+        socket.on('request_constructive_game', (calling_user_id: string) => {
+            socketUsers[calling_user_id].socket_ids.forEach((socket_id) =>
+                io.to(socket_id).emit('request_constructive_game')
+            )
+        })
+
+        socket.on('reject_constructive_game', (calling_user_id: string) => {
+            socketUsers[calling_user_id].socket_ids.forEach((socket_id) =>
+                io.to(socket_id).emit('reject_constructive_game')
+            )
+        })
+
+        socket.on(
+            'accept_constructive_game',
+            ({ calling_user_id, constructive_result }: { calling_user_id: string; constructive_result: any }) => {
+                socketUsers[calling_user_id].socket_ids.forEach((socket_id) =>
+                    io.to(socket_id).emit('accept_constructive_game', constructive_result)
+                )
+            }
+        )
+
+        socket.on('leave_call', async ({ user_id: my_id }: { user_id: string }) => {
+            const me = getDatingCallUser(my_id)
+
+            if (me) {
+                const calling_user_id = me.calling_user_id
+
+                socketDatingCallUsers = socketDatingCallUsers.filter(
+                    (userCall) => ![my_id, ...(calling_user_id ? [calling_user_id] : [])].includes(userCall.user_id)
+                )
+
+                socketUsers[my_id].socket_ids
+                    .concat(calling_user_id ? socketUsers[calling_user_id].socket_ids : [])
+                    .forEach((socket_id) => io.to(socket_id).emit('leave_call'))
+
+                console.log('leave_call', my_id, calling_user_id)
+                console.log('socketDatingCallUsers', socketDatingCallUsers)
+            }
+        })
+
+        socket.on('end_call', async ({ user_id: my_id }: { user_id: string }) => {
+            const me = getDatingCallUser(my_id)
+
+            if (me) {
+                const calling_user_id = me.calling_user_id
+
+                socketDatingCallUsers = socketDatingCallUsers.filter(
+                    (userCall) => ![my_id, ...(calling_user_id ? [calling_user_id] : [])].includes(userCall.user_id)
+                )
+
+                socketUsers[my_id].socket_ids
+                    .concat(calling_user_id ? socketUsers[calling_user_id].socket_ids : [])
+                    .forEach((socket_id) => io.to(socket_id).emit('end_call'))
+
+                console.log('end_call', my_id, calling_user_id)
+                console.log('socketDatingCallUsers', socketDatingCallUsers)
+            }
+        })
+
+        socket.on('create_dating_call', ({ user_id, dating_call }: { user_id: string; dating_call: DatingCall }) => {
+            socketUsers[user_id].socket_ids.forEach((socket_id) =>
+                io.to(socket_id).emit('create_dating_call', dating_call)
+            )
         })
     })
 }

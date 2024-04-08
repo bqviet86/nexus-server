@@ -16,7 +16,14 @@ provincesRouter.get(
     '/',
     accessTokenValidator,
     wrapRequestHandler(async (req, res) => {
-        const provinces = await databaseService.provinces.find({}).toArray()
+        const provinces = await databaseService.provinces
+            .find(
+                {},
+                {
+                    sort: { province_name: 1 }
+                }
+            )
+            .toArray()
 
         return res.json({
             message: 'Lấy danh sách tỉnh thành thành công',

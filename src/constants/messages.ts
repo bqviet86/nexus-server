@@ -194,3 +194,33 @@ export const MBTI_TEST_MESSAGES = {
     COMPLETE_MBTI_TEST_SUCCESS: 'Hoàn thành bài trắc nghiệm MBTI thành công',
     DELETE_MBTI_TEST_SUCCESS: 'Xóa bài trắc nghiệm MBTI thành công'
 }
+
+export const CONSTRUCTIVE_RESULTS_MESSAGES = {
+    DATING_USER_ID_INVALID: 'ID người dùng hẹn hò không hợp lệ',
+    NOT_ALLOWED_TO_CREATE_RESULT: 'Không được phép tạo trò chơi kiến tạo',
+    DATING_USER_NOT_FOUND: 'Không tìm thấy người dùng hẹn hò',
+    DATING_CALL_ID_INVALID: 'ID cuộc gọi hẹn hò không hợp lệ',
+    DATING_CALL_NOT_FOUND: 'Không tìm thấy cuộc gọi hẹn hò',
+    NOT_ALLOWED_TO_GET_RESULT: 'Không được phép lấy kết quả',
+    INVALID_CONSTRUCTIVE_RESULT_ID: 'ID trò chơi kiến tạo không hợp lệ',
+    CONSTRUCTIVE_RESULT_NOT_FOUND: 'Không tìm thấy trò chơi kiến tạo',
+    QUESTION_ID_INVALID: 'ID câu hỏi không hợp lệ',
+    QUESTION_NOT_FOUND: 'Không tìm thấy câu hỏi',
+    ANSWER_MUST_BE_STRING: 'Câu trả lời phải là một chuỗi',
+    INVALID_ANSWER_OPTION: 'Câu trả lời không hợp lệ',
+
+    CONSTRUCTIVE_RESULT_CREATED_SUCCESSFULLY: 'Tạo trò chơi kiến tạo thành công',
+    GET_CONSTRUCTIVE_RESULT_SUCCESSFULLY: 'Lấy kết quả trò chơi kiến tạo thành công',
+    UPDATE_ANSWER_CONSTRUCTIVE_RESULT_SUCCESSFULLY: 'Cập nhật câu trả lời trò chơi kiến tạo thành công'
+}
+
+export const DATING_CALL_MESSAGES = {
+    DATING_USER_ID_INVALID: 'ID người dùng hẹn hò không hợp lệ',
+    NOT_ALLOWED_TO_CREATE_CALL: 'Không được phép tạo cuộc gọi',
+    DATING_USER_NOT_FOUND: 'Không tìm thấy người dùng hẹn hò',
+    CONSTRUCTIVE_RESULT_ID_INVALID: 'ID kết quả trò chơi kiến tạo không hợp lệ',
+    DURATION_IS_INVALID: 'Thời lượng cuộc gọi không hợp lệ',
+
+    DATING_CALL_CREATED_SUCCESSFULLY: 'Tạo cuộc gọi hẹn hò thành công',
+    GET_ALL_DATING_CALLS_SUCCESSFULLY: 'Lấy tất cả cuộc gọi hẹn hò thành công'
+}

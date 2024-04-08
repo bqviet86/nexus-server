@@ -12,11 +12,11 @@ export const wrapRequestHandler = <P, ResBody, ReqBody, ReqQuery>(
     }
 }
 
-export const delayExecution = (callback: () => void, delay: number) => {
-    return new Promise<void>((resolve) => {
+export const delayExecution = <T>(callback: () => T, delay: number) => {
+    return new Promise<T>((resolve) => {
         const timeoutId = setTimeout(() => {
-            callback()
-            resolve()
+            const result = callback()
+            resolve(result)
             clearTimeout(timeoutId)
         }, delay)
     })

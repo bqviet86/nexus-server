@@ -28,3 +28,13 @@ export type MBTIAnswer = {
     question_id: ObjectId
     answer: MBTIValue | ''
 }
+
+export type ConstructiveAnswer = {
+    question_id: ObjectId
+    answer: string
+}
+
+export type ConstructiveUserAnswer = {
+    id: ObjectId
+    answers: ConstructiveAnswer[]
+}

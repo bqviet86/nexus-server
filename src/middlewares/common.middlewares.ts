@@ -4,11 +4,12 @@ import { ObjectId } from 'mongodb'
 import { pick } from 'lodash'
 
 import HTTP_STATUS from '~/constants/httpStatus'
-import { COMMON_MESSAGES, MBTI_TEST_MESSAGES } from '~/constants/messages'
+import { COMMON_MESSAGES, CONSTRUCTIVE_RESULTS_MESSAGES, MBTI_TEST_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
 import { TokenPayload } from '~/models/requests/User.requests'
 import DatingUser from '~/models/schemas/DatingUser.schema'
 import MBTITest from '~/models/schemas/MBTITest.schema'
+import ConstructiveResult from '~/models/schemas/ConstructiveResult.schema'
 import databaseService from '~/services/database.services'
 import mbtiTestService from '~/services/mbtiTests.services'
 import { validate } from '~/utils/validation'
@@ -157,9 +158,9 @@ export const questionIdMBTITestValidator = validate(
                         }
 
                         const mbti_test = (req as Request).mbti_test as MBTITest
-                        const isQuestionExist = mbti_test.answers
-                            .map((answer) => (answer as any).question._id.toString())
-                            .includes(value)
+                        const isQuestionExist = mbti_test.answers.some(
+                            (answer) => (answer as any).question._id.toString() === value
+                        )
 
                         if (!isQuestionExist) {
                             throw new ErrorWithStatus({
@@ -169,6 +170,90 @@ export const questionIdMBTITestValidator = validate(
                         }
 
                         ;(req as Request).mbti_question = mbtiQuestion
+
+                        return true
+                    }
+                }
+            }
+        },
+        ['body']
+    )
+)
+
+export const constructiveResultIdValidator = validate(
+    checkSchema(
+        {
+            constructive_result_id: {
+                trim: true,
+                custom: {
+                    options: async (value: string, { req }) => {
+                        if (!ObjectId.isValid(value)) {
+                            throw new ErrorWithStatus({
+                                message: CONSTRUCTIVE_RESULTS_MESSAGES.INVALID_CONSTRUCTIVE_RESULT_ID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const constructiveResult = await databaseService.constructiveResults.findOne({
+                            _id: new ObjectId(value)
+                        })
+
+                        if (constructiveResult === null) {
+                            throw new ErrorWithStatus({
+                                message: CONSTRUCTIVE_RESULTS_MESSAGES.CONSTRUCTIVE_RESULT_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        ;(req as Request).constructive_result = constructiveResult
+
+                        return true
+                    }
+                }
+            }
+        },
+        ['params']
+    )
+)
+
+export const questionIdConstructiveResultValidator = validate(
+    checkSchema(
+        {
+            question_id: {
+                trim: true,
+                custom: {
+                    options: async (value: string, { req }) => {
+                        if (!ObjectId.isValid(value)) {
+                            throw new ErrorWithStatus({
+                                message: CONSTRUCTIVE_RESULTS_MESSAGES.QUESTION_ID_INVALID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const constructiveQuestion = await databaseService.constructiveQuestions.findOne({
+                            _id: new ObjectId(value)
+                        })
+
+                        if (constructiveQuestion === null) {
+                            throw new ErrorWithStatus({
+                                message: CONSTRUCTIVE_RESULTS_MESSAGES.QUESTION_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        const constructive_result = (req as Request).constructive_result as ConstructiveResult
+                        const isQuestionExist = constructive_result.first_user.answers.some(
+                            (answer) => answer.question_id.toString() === value
+                        )
+
+                        if (!isQuestionExist) {
+                            throw new ErrorWithStatus({
+                                message: CONSTRUCTIVE_RESULTS_MESSAGES.QUESTION_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        ;(req as Request).constructive_question = constructiveQuestion
 
                         return true
                     }

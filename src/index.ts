@@ -16,6 +16,10 @@ import datingCriteriasRouter from './routes/datingCriterias.routes'
 import provincesRouter from './routes/provinces.routes'
 import mbtiQuestionsRouter from './routes/mbtiQuestions.routes'
 import mbtiTestsRouter from './routes/mbtiTests.routes'
+import constructiveQuestionsRouter from './routes/constructiveQuestions.routes'
+import constructiveResultsRouter from './routes/constructiveResults.routes'
+import datingCallsRouter from './routes/datingCalls.routes'
+import datingReviewsRouter from './routes/datingReviews.routes'
 import staticRouter from './routes/static.routes'
 import databaseService from '~/services/database.services'
 import { initFolder } from './utils/file'
@@ -55,6 +59,10 @@ app.use('/dating-criterias', datingCriteriasRouter)
 app.use('/provinces', provincesRouter)
 app.use('/mbti-questions', mbtiQuestionsRouter)
 app.use('/mbti-tests', mbtiTestsRouter)
+app.use('/constructive-questions', constructiveQuestionsRouter)
+app.use('/constructive-results', constructiveResultsRouter)
+app.use('/dating-calls', datingCallsRouter)
+app.use('/dating-reviews', datingReviewsRouter)
 app.use('/static', staticRouter)
 
 // Error handler

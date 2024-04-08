@@ -15,6 +15,10 @@ import DatingCriteria from '~/models/schemas/DatingCriteria.schema'
 import Province from '~/models/schemas/Province.schema'
 import MBTIQuestion from '~/models/schemas/MBTIQuestion.schema'
 import MBTITest from '~/models/schemas/MBTITest.schema'
+import ConstructiveQuestion from '~/models/schemas/ConstructiveQuestion.schema'
+import ConstructiveResult from '~/models/schemas/ConstructiveResult.schema'
+import DatingCall from '~/models/schemas/DatingCall.schema'
+import DatingReview from '~/models/schemas/DatingReview.schema'
 
 config()
 
@@ -92,6 +96,22 @@ class DatabaseService {
 
     get mbtiTests(): Collection<MBTITest> {
         return this.db.collection(process.env.DB_MBTI_TESTS_COLLECTION as string)
+    }
+
+    get constructiveQuestions(): Collection<ConstructiveQuestion> {
+        return this.db.collection(process.env.DB_CONSTRUCTIVE_QUESTIONS_COLLECTION as string)
+    }
+
+    get constructiveResults(): Collection<ConstructiveResult> {
+        return this.db.collection(process.env.DB_CONSTRUCTIVE_RESULTS_COLLECTION as string)
+    }
+
+    get datingCalls(): Collection<DatingCall> {
+        return this.db.collection(process.env.DB_DATING_CALLS_COLLECTION as string)
+    }
+
+    get datingReviews(): Collection<DatingReview> {
+        return this.db.collection(process.env.DB_DATING_REVIEWS_COLLECTION as string)
     }
 }
 

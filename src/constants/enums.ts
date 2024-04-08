@@ -109,3 +109,11 @@ export enum MBTITestStatus {
     Processing = 'processing',
     Completed = 'completed'
 }
+
+export enum MBTICompatibility {
+    Best = 'Best',
+    Good = 'Good',
+    Average = 'Average',
+    Bad = 'Bad',
+    Worst = 'Worst'
+}

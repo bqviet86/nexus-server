@@ -6,7 +6,7 @@ import DatingUser from '~/models/schemas/DatingUser.schema'
 import databaseService from './database.services'
 
 class DatingUserService {
-    commonAggregateDatingUsers(): Document[] {
+    commonAggregateDatingUsers(keepUserId: boolean = false): Document[] {
         return [
             {
                 $lookup: {
@@ -59,7 +59,7 @@ class DatingUserService {
             },
             {
                 $project: {
-                    user_id: 0,
+                    ...(keepUserId ? {} : { user_id: 0 }),
                     mbti_tests: 0,
                     mbti_test: 0
                 }
