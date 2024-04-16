@@ -89,7 +89,7 @@ class DatingUserService {
     }
 
     async updateDatingProfile({ user_id, payload }: { user_id: string; payload: UpdateDatingProfileReqBody }) {
-        const { name, sex, age, height, hometown, language } = payload
+        const { name, sex, age, height, hometown, language, avatar, images } = payload
         const datingUser = await databaseService.datingUsers.findOneAndUpdate(
             { user_id: new ObjectId(user_id) },
             {
@@ -99,7 +99,9 @@ class DatingUserService {
                     ...(age ? { age } : {}),
                     ...(height ? { height } : {}),
                     ...(hometown ? { hometown } : {}),
-                    ...(language ? { language } : {})
+                    ...(language ? { language } : {}),
+                    ...(avatar ? { avatar } : {}),
+                    ...(images ? { images } : {})
                 },
                 $currentDate: {
                     updated_at: true

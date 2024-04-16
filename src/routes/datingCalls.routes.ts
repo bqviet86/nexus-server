@@ -2,7 +2,7 @@ import { Router } from 'express'
 
 import { createDatingCallController, getAllDatingCallsController } from '~/controllers/datingCalls.controllers'
 import { checkDatingProfileExistence } from '~/middlewares/common.middlewares'
-import { createDatingCallValidator } from '~/middlewares/datingCalls.middlewares'
+import { createDatingCallValidator, getAllDatingCallsValidator } from '~/middlewares/datingCalls.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
@@ -28,11 +28,13 @@ datingCallsRouter.post(
  * Path: /
  * Method: GET
  * Header: { Authorization: Bearer <access_token> }
+ * Query: { dating_profile_id?: string }
  */
 datingCallsRouter.get(
     '/',
     accessTokenValidator,
     checkDatingProfileExistence,
+    getAllDatingCallsValidator,
     wrapRequestHandler(getAllDatingCallsController)
 )
 

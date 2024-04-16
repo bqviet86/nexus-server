@@ -12,12 +12,14 @@ import Post from '~/models/schemas/Post.schema'
 import DatingUser from '~/models/schemas/DatingUser.schema'
 import DatingCriteria from '~/models/schemas/DatingCriteria.schema'
 import DatingCall from '~/models/schemas/DatingCall.schema'
+import DatingConversation from '~/models/schemas/DatingConversation.schema'
 import commentService from '~/services/comments.services'
 import notificationService from '~/services/notifications.services'
 import databaseService from '~/services/database.services'
 import datingUserService from '~/services/datingUsers.services'
 import { verifyAccessToken } from './commons'
 import { delayExecution } from './handlers'
+import datingConversationService from '~/services/datingConversations.services'
 
 type UserSocket = {
     socket_ids: string[]
@@ -85,9 +87,11 @@ const initSocket = (httpServer: ServerHttp) => {
             Object.keys(socketUsers)
                 .filter((userId) => socketDatingUsers.includes(userId))
                 .forEach((userId) => {
-                    socketUsers[userId].socket_ids.forEach((socket_id) =>
-                        io.to(socket_id).emit('dating_room_updated', socketDatingUsers.length)
-                    )
+                    if (socketUsers[userId]) {
+                        socketUsers[userId].socket_ids.forEach((socket_id) =>
+                            io.to(socket_id).emit('dating_room_updated', socketDatingUsers.length)
+                        )
+                    }
                 })
         }, 300)
     }
@@ -121,6 +125,10 @@ const initSocket = (httpServer: ServerHttp) => {
         }
 
         return score
+    }
+
+    const filterDatingCallUsers = (user_ids: string[]) => {
+        socketDatingCallUsers = socketDatingCallUsers.filter((userCall) => !user_ids.includes(userCall.user_id))
     }
 
     io.on('connection', (socket) => {
@@ -193,9 +201,11 @@ const initSocket = (httpServer: ServerHttp) => {
 
                 await delayExecution(() => {
                     Object.keys(socketUsers).forEach((userId) => {
-                        socketUsers[userId].socket_ids.forEach((socket_id) =>
-                            io.to(socket_id).emit(NotificationPostAction.CommentPost, { notification, comment })
-                        )
+                        if (socketUsers[userId]) {
+                            socketUsers[userId].socket_ids.forEach((socket_id) =>
+                                io.to(socket_id).emit(NotificationPostAction.CommentPost, { notification, comment })
+                            )
+                        }
                     })
                 }, 300)
             }
@@ -420,12 +430,14 @@ const initSocket = (httpServer: ServerHttp) => {
                         user.is_calculating = false
                         userToCall = userProfile
 
-                        socketUsers[my_id].socket_ids.forEach((socket_id) =>
-                            io.to(socket_id).emit('find_call_user', {
-                                my_profile: myProfile,
-                                user_profile: userProfile
-                            })
-                        )
+                        if (socketUsers[my_id]) {
+                            socketUsers[my_id].socket_ids.forEach((socket_id) =>
+                                io.to(socket_id).emit('find_call_user', {
+                                    my_profile: myProfile,
+                                    user_profile: userProfile
+                                })
+                            )
+                        }
                     }
 
                     return userToCall ? true : false
@@ -436,6 +448,7 @@ const initSocket = (httpServer: ServerHttp) => {
 
             if (count >= 3 && !isMatched) {
                 socket.emit('call_timeout')
+                filterDatingCallUsers([my_id])
             }
 
             console.log('find_call_user', my_id)
@@ -445,9 +458,11 @@ const initSocket = (httpServer: ServerHttp) => {
         socket.on(
             'call_user',
             async ({ user_from, user_to, signalData }: { user_from: DatingUser; user_to: string; signalData: any }) => {
-                socketUsers[user_to].socket_ids.forEach((socket_id) =>
-                    io.to(socket_id).emit('call_user', { user_from, signalData })
-                )
+                if (socketUsers[user_to]) {
+                    socketUsers[user_to].socket_ids.forEach((socket_id) =>
+                        io.to(socket_id).emit('call_user', { user_from, signalData })
+                    )
+                }
 
                 console.log('call_user', user_from.user_id.toString(), user_to)
                 console.log('socketDatingCallUsers', socketDatingCallUsers)
@@ -455,30 +470,40 @@ const initSocket = (httpServer: ServerHttp) => {
         )
 
         socket.on('call_accepted', async ({ user_to, signalData }: { user_to: string; signalData: any }) => {
-            socketUsers[user_to].socket_ids.forEach((socket_id) => io.to(socket_id).emit('call_accepted', signalData))
+            if (socketUsers[user_to]) {
+                socketUsers[user_to].socket_ids.forEach((socket_id) =>
+                    io.to(socket_id).emit('call_accepted', signalData)
+                )
+            }
 
             console.log('call_accepted', user_id, user_to)
             console.log('socketDatingCallUsers', socketDatingCallUsers)
         })
 
         socket.on('request_constructive_game', (calling_user_id: string) => {
-            socketUsers[calling_user_id].socket_ids.forEach((socket_id) =>
-                io.to(socket_id).emit('request_constructive_game')
-            )
+            if (socketUsers[calling_user_id]) {
+                socketUsers[calling_user_id].socket_ids.forEach((socket_id) =>
+                    io.to(socket_id).emit('request_constructive_game')
+                )
+            }
         })
 
         socket.on('reject_constructive_game', (calling_user_id: string) => {
-            socketUsers[calling_user_id].socket_ids.forEach((socket_id) =>
-                io.to(socket_id).emit('reject_constructive_game')
-            )
+            if (socketUsers[calling_user_id]) {
+                socketUsers[calling_user_id].socket_ids.forEach((socket_id) =>
+                    io.to(socket_id).emit('reject_constructive_game')
+                )
+            }
         })
 
         socket.on(
             'accept_constructive_game',
             ({ calling_user_id, constructive_result }: { calling_user_id: string; constructive_result: any }) => {
-                socketUsers[calling_user_id].socket_ids.forEach((socket_id) =>
-                    io.to(socket_id).emit('accept_constructive_game', constructive_result)
-                )
+                if (socketUsers[calling_user_id]) {
+                    socketUsers[calling_user_id].socket_ids.forEach((socket_id) =>
+                        io.to(socket_id).emit('accept_constructive_game', constructive_result)
+                    )
+                }
             }
         )
 
@@ -488,13 +513,17 @@ const initSocket = (httpServer: ServerHttp) => {
             if (me) {
                 const calling_user_id = me.calling_user_id
 
-                socketDatingCallUsers = socketDatingCallUsers.filter(
-                    (userCall) => ![my_id, ...(calling_user_id ? [calling_user_id] : [])].includes(userCall.user_id)
-                )
+                filterDatingCallUsers([my_id, ...(calling_user_id ? [calling_user_id] : [])])
 
-                socketUsers[my_id].socket_ids
-                    .concat(calling_user_id ? socketUsers[calling_user_id].socket_ids : [])
-                    .forEach((socket_id) => io.to(socket_id).emit('leave_call'))
+                if (socketUsers[my_id]) {
+                    socketUsers[my_id].socket_ids
+                        .concat(
+                            calling_user_id && socketUsers[calling_user_id]
+                                ? socketUsers[calling_user_id].socket_ids
+                                : []
+                        )
+                        .forEach((socket_id) => io.to(socket_id).emit('leave_call'))
+                }
 
                 console.log('leave_call', my_id, calling_user_id)
                 console.log('socketDatingCallUsers', socketDatingCallUsers)
@@ -507,13 +536,17 @@ const initSocket = (httpServer: ServerHttp) => {
             if (me) {
                 const calling_user_id = me.calling_user_id
 
-                socketDatingCallUsers = socketDatingCallUsers.filter(
-                    (userCall) => ![my_id, ...(calling_user_id ? [calling_user_id] : [])].includes(userCall.user_id)
-                )
+                filterDatingCallUsers([my_id, ...(calling_user_id ? [calling_user_id] : [])])
 
-                socketUsers[my_id].socket_ids
-                    .concat(calling_user_id ? socketUsers[calling_user_id].socket_ids : [])
-                    .forEach((socket_id) => io.to(socket_id).emit('end_call'))
+                if (socketUsers[my_id]) {
+                    socketUsers[my_id].socket_ids
+                        .concat(
+                            calling_user_id && socketUsers[calling_user_id]
+                                ? socketUsers[calling_user_id].socket_ids
+                                : []
+                        )
+                        .forEach((socket_id) => io.to(socket_id).emit('end_call'))
+                }
 
                 console.log('end_call', my_id, calling_user_id)
                 console.log('socketDatingCallUsers', socketDatingCallUsers)
@@ -521,10 +554,57 @@ const initSocket = (httpServer: ServerHttp) => {
         })
 
         socket.on('create_dating_call', ({ user_id, dating_call }: { user_id: string; dating_call: DatingCall }) => {
-            socketUsers[user_id].socket_ids.forEach((socket_id) =>
-                io.to(socket_id).emit('create_dating_call', dating_call)
-            )
+            if (socketUsers[user_id]) {
+                socketUsers[user_id].socket_ids.forEach((socket_id) =>
+                    io.to(socket_id).emit('create_dating_call', dating_call)
+                )
+            }
         })
+
+        socket.on(
+            'dating_send_message',
+            async ({
+                sender_id,
+                receiver_id,
+                content
+            }: {
+                sender_id: string
+                receiver_id: string
+                content: string
+            }) => {
+                const result = await databaseService.datingConversations.insertOne(
+                    new DatingConversation({
+                        sender_id: new ObjectId(sender_id),
+                        receiver_id: new ObjectId(receiver_id),
+                        content: content
+                    })
+                )
+                const [[conversation], { user_id: my_id }, { user_id }] = await Promise.all([
+                    databaseService.datingConversations
+                        .aggregate<DatingConversation>([
+                            {
+                                $match: {
+                                    _id: result.insertedId
+                                }
+                            },
+                            ...datingConversationService.commonAggregateDatingConversations
+                        ])
+                        .toArray(),
+                    databaseService.datingUsers.findOne({
+                        _id: new ObjectId(sender_id)
+                    }) as Promise<DatingUser>,
+                    databaseService.datingUsers.findOne({
+                        _id: new ObjectId(receiver_id)
+                    }) as Promise<DatingUser>
+                ])
+
+                if (socketUsers[my_id.toString()]) {
+                    socketUsers[my_id.toString()].socket_ids
+                        .concat(socketUsers[user_id.toString()] ? socketUsers[user_id.toString()].socket_ids : [])
+                        .forEach((socket_id) => io.to(socket_id).emit('dating_receive_message', conversation))
+                }
+            }
+        )
     })
 }
 

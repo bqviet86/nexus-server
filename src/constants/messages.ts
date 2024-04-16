@@ -153,6 +153,9 @@ export const DATING_USERS_MESSAGES = {
     HOMETOWN_MUST_BE_A_STRING: 'Quê quán phải là một chuỗi',
     HOMETOWN_LENGTH_MUST_BE_FROM_1_TO_100: 'Quê quán phải có độ dài từ 1 đến 100 ký tự',
     LANGUAGE_IS_INVALID: 'Ngôn ngữ không hợp lệ',
+    AVATAR_MUST_BE_A_STRING: 'Avatar phải là một chuỗi',
+    IMAGES_MUST_BE_AN_ARRAY: 'Images phải là một mảng',
+    IMAGES_MUST_BE_AN_ARRAY_OF_MEDIA: 'Images phải là một mảng các Media object',
 
     GET_DATING_PROFILE_SUCCESSFULLY: 'Lấy hồ sơ hẹn hò thành công',
     CREATE_DATING_PROFILE_SUCCESSFULLY: 'Tạo hồ sơ hẹn hò thành công',
@@ -223,4 +226,12 @@ export const DATING_CALL_MESSAGES = {
 
     DATING_CALL_CREATED_SUCCESSFULLY: 'Tạo cuộc gọi hẹn hò thành công',
     GET_ALL_DATING_CALLS_SUCCESSFULLY: 'Lấy tất cả cuộc gọi hẹn hò thành công'
+}
+
+export const DATING_CONVERSATIONS_MESSAGES = {
+    INVALID_RECEIVER_ID: 'ID người nhận không hợp lệ',
+    RECEIVER_NOT_FOUND: 'Không tìm thấy người nhận',
+
+    GET_ALL_DATING_CONVERSATIONS_SUCCESSFULLY: 'Lấy tất cả cuộc trò chuyện hẹn hò thành công',
+    GET_DATING_CONVERSATION_SUCCESSFULLY: 'Lấy cuộc trò chuyện hẹn hò thành công'
 }

@@ -20,6 +20,7 @@ import constructiveQuestionsRouter from './routes/constructiveQuestions.routes'
 import constructiveResultsRouter from './routes/constructiveResults.routes'
 import datingCallsRouter from './routes/datingCalls.routes'
 import datingReviewsRouter from './routes/datingReviews.routes'
+import datingConversationsRouter from './routes/datingConversations.routes'
 import staticRouter from './routes/static.routes'
 import databaseService from '~/services/database.services'
 import { initFolder } from './utils/file'
@@ -63,6 +64,7 @@ app.use('/constructive-questions', constructiveQuestionsRouter)
 app.use('/constructive-results', constructiveResultsRouter)
 app.use('/dating-calls', datingCallsRouter)
 app.use('/dating-reviews', datingReviewsRouter)
+app.use('/dating-conversations', datingConversationsRouter)
 app.use('/static', staticRouter)
 
 // Error handler

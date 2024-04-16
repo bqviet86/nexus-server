@@ -28,17 +28,29 @@ class DatingCallService {
         return datingCall
     }
 
-    async getAllDatingCalls(dating_profile: DatingUser) {
+    async getAllDatingCalls({
+        user_dating_profile_id,
+        dating_profile
+    }: {
+        user_dating_profile_id?: string
+        dating_profile: DatingUser
+    }) {
         const datingCalls = await databaseService.datingCalls
             .aggregate<DatingCall>([
                 {
                     $match: {
                         $or: [
                             {
-                                first_user_id: dating_profile._id as ObjectId
+                                first_user_id: dating_profile._id as ObjectId,
+                                ...(user_dating_profile_id
+                                    ? { second_user_id: new ObjectId(user_dating_profile_id) }
+                                    : {})
                             },
                             {
-                                second_user_id: dating_profile._id as ObjectId
+                                second_user_id: dating_profile._id as ObjectId,
+                                ...(user_dating_profile_id
+                                    ? { first_user_id: new ObjectId(user_dating_profile_id) }
+                                    : {})
                             }
                         ]
                     }
@@ -213,6 +225,78 @@ class DatingCallService {
                     }
                 },
                 {
+                    $lookup: {
+                        from: 'dating_reviews',
+                        localField: '_id',
+                        foreignField: 'dating_call_id',
+                        as: 'reviews'
+                    }
+                },
+                {
+                    $addFields: {
+                        first_review: {
+                            $filter: {
+                                input: '$reviews',
+                                as: 'review',
+                                cond: {
+                                    $eq: ['$$review.user_id', '$first_user._id']
+                                }
+                            }
+                        },
+                        second_review: {
+                            $filter: {
+                                input: '$reviews',
+                                as: 'review',
+                                cond: {
+                                    $eq: ['$$review.user_id', '$second_user._id']
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$first_review',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$second_review',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $addFields: {
+                        first_review: {
+                            $ifNull: [
+                                '$first_review',
+                                {
+                                    review_texts: [],
+                                    stars_rating: 0
+                                }
+                            ]
+                        },
+                        second_review: {
+                            $ifNull: [
+                                '$second_review',
+                                {
+                                    review_texts: [],
+                                    stars_rating: 0
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        'first_user.review_texts': '$first_review.review_texts',
+                        'first_user.stars_rating': '$first_review.stars_rating',
+                        'second_user.review_texts': '$second_review.review_texts',
+                        'second_user.stars_rating': '$second_review.stars_rating'
+                    }
+                },
+                {
                     $project: {
                         first_user_id: 0,
                         second_user_id: 0,
@@ -223,7 +307,15 @@ class DatingCallService {
                         'second_user.user_id': 0,
                         'second_user.mbti_tests': 0,
                         'second_user.mbti_test': 0,
-                        constructive_result: 0
+                        constructive_result: 0,
+                        reviews: 0,
+                        first_review: 0,
+                        second_review: 0
+                    }
+                },
+                {
+                    $sort: {
+                        created_at: -1
                     }
                 }
             ])

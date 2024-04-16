@@ -88,3 +88,38 @@ export const createDatingCallValidator = validate(
         ['body']
     )
 )
+
+export const getAllDatingCallsValidator = validate(
+    checkSchema(
+        {
+            dating_profile_id: {
+                trim: true,
+                optional: true,
+                custom: {
+                    options: async (value: string) => {
+                        if (!ObjectId.isValid(value)) {
+                            throw new ErrorWithStatus({
+                                message: DATING_CALL_MESSAGES.DATING_USER_ID_INVALID,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        const datingProfile = await databaseService.datingUsers.findOne({
+                            _id: new ObjectId(value)
+                        })
+
+                        if (datingProfile === null) {
+                            throw new ErrorWithStatus({
+                                message: DATING_CALL_MESSAGES.DATING_USER_NOT_FOUND,
+                                status: HTTP_STATUS.NOT_FOUND
+                            })
+                        }
+
+                        return true
+                    }
+                }
+            }
+        },
+        ['query']
+    )
+)

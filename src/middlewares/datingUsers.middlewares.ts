@@ -9,6 +9,7 @@ import { ErrorWithStatus } from '~/models/Errors'
 import DatingUser from '~/models/schemas/DatingUser.schema'
 import databaseService from '~/services/database.services'
 import datingUserService from '~/services/datingUsers.services'
+import { isMedia } from '~/utils/check'
 import { stringEnumToArray } from '~/utils/commons'
 import { validate } from '~/utils/validation'
 
@@ -166,6 +167,30 @@ export const updateDatingProfileValidator = validate(
             language: {
                 ...languageSchema,
                 optional: true
+            },
+            avatar: {
+                isString: {
+                    errorMessage: DATING_USERS_MESSAGES.AVATAR_MUST_BE_A_STRING
+                },
+                optional: true
+            },
+            images: {
+                isArray: {
+                    errorMessage: DATING_USERS_MESSAGES.IMAGES_MUST_BE_AN_ARRAY
+                },
+                optional: true,
+                custom: {
+                    options: (value: string[]) => {
+                        if (value.some((image) => !isMedia(image))) {
+                            throw new ErrorWithStatus({
+                                message: DATING_USERS_MESSAGES.IMAGES_MUST_BE_AN_ARRAY_OF_MEDIA,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        return true
+                    }
+                }
             }
         },
         ['body']

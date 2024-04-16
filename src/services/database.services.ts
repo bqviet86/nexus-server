@@ -19,6 +19,7 @@ import ConstructiveQuestion from '~/models/schemas/ConstructiveQuestion.schema'
 import ConstructiveResult from '~/models/schemas/ConstructiveResult.schema'
 import DatingCall from '~/models/schemas/DatingCall.schema'
 import DatingReview from '~/models/schemas/DatingReview.schema'
+import DatingConversation from '~/models/schemas/DatingConversation.schema'
 
 config()
 
@@ -112,6 +113,10 @@ class DatabaseService {
 
     get datingReviews(): Collection<DatingReview> {
         return this.db.collection(process.env.DB_DATING_REVIEWS_COLLECTION as string)
+    }
+
+    get datingConversations(): Collection<DatingConversation> {
+        return this.db.collection(process.env.DB_DATING_CONVERSATIONS_COLLECTION as string)
     }
 }
 

@@ -4,3 +4,7 @@ export interface CreateDatingCallReqBody {
     constructive_result_id?: string
     duration: number
 }
+
+export interface GetAllDatingCallsReqQuery {
+    dating_profile_id?: string
+}

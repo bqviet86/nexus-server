@@ -58,7 +58,16 @@ datingUsersRouter.patch(
     accessTokenValidator,
     checkDatingProfileExistence,
     updateDatingProfileValidator,
-    filterMiddleware<UpdateDatingProfileReqBody>(['name', 'sex', 'age', 'height', 'hometown', 'language']),
+    filterMiddleware<UpdateDatingProfileReqBody>([
+        'name',
+        'sex',
+        'age',
+        'height',
+        'hometown',
+        'language',
+        'avatar',
+        'images'
+    ]),
     wrapRequestHandler(updateDatingProfileController)
 )
 
