@@ -177,34 +177,12 @@ export const getAllFriendsController = async (req: Request<GetAllFriendsReqParam
     })
 }
 
-export const loginAdminController = async (req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) => {
-    const { _id, role } = req.user as User
-
-    if (role !== UserRole.Admin) {
-        return res.status(HTTP_STATUS.FORBIDDEN).json({
-            message: USERS_MESSAGES.USER_NOT_ADMIN
-        })
-    }
-
-    const result = await usersService.login({ user_id: (_id as ObjectId).toString(), role })
+// Admin
+export const getAllStatsController = async (req: Request, res: Response) => {
+    const result = await usersService.getAllStats()
 
     return res.json({
-        message: USERS_MESSAGES.LOGIN_SUCCESS,
+        message: USERS_MESSAGES.GET_ALL_STATS_SUCCESS,
         result
     })
-}
-
-export const logoutAdminController = async (req: Request<ParamsDictionary, any, LogoutReqBody>, res: Response) => {
-    const { role } = req.decoded_refresh_token as TokenPayload
-    const { refresh_token } = req.body
-
-    if (role !== UserRole.Admin) {
-        return res.status(HTTP_STATUS.FORBIDDEN).json({
-            message: USERS_MESSAGES.USER_NOT_ADMIN
-        })
-    }
-
-    const result = await usersService.logout(refresh_token)
-
-    return res.json(result)
 }

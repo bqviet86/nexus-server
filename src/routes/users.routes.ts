@@ -6,11 +6,10 @@ import {
     getAllFriendRequestsController,
     getAllFriendSuggestionsController,
     getAllFriendsController,
+    getAllStatsController,
     getMeController,
     getProfileController,
-    loginAdminController,
     loginController,
-    logoutAdminController,
     logoutController,
     refreshTokenController,
     registerController,
@@ -208,26 +207,11 @@ usersRouter.get(
 // Admin routes
 
 /**
- * Description: Login admin
- * Path: /admin/login
- * Method: POST
- * Body: { email: string, password: string }
- */
-usersRouter.post('/admin/login', loginValidator, wrapRequestHandler(loginAdminController))
-
-/**
- * Description: Logout admin
- * Path: /admin/logout
- * Method: POST
+ * Description: Get all stats
+ * Path: /admin/stats
+ * Method: GET
  * Header: { Authorization: Bearer <access_token> }
- * Body: { refresh_token: string }
  */
-usersRouter.post(
-    '/admin/logout',
-    accessTokenValidator,
-    refreshTokenValidator,
-    isAdminValidator,
-    wrapRequestHandler(logoutAdminController)
-)
+usersRouter.get('/admin/stats', accessTokenValidator, isAdminValidator, wrapRequestHandler(getAllStatsController))
 
 export default usersRouter

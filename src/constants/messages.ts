@@ -73,7 +73,8 @@ export const USERS_MESSAGES = {
     GET_ALL_FRIEND_SUGGESTIONS_SUCCESS: 'Lấy tất cả gợi ý kết bạn thành công',
     SEND_FRIEND_REQUEST_SUCCESS: 'Gửi lời mời kết bạn thành công',
     RESPONSE_FRIEND_REQUEST_SUCCESS: 'Phản hồi lời mời kết bạn thành công',
-    CANCEL_FRIEND_REQUEST_SUCCESS: 'Hủy lời mời kết bạn thành công'
+    CANCEL_FRIEND_REQUEST_SUCCESS: 'Hủy lời mời kết bạn thành công',
+    GET_ALL_STATS_SUCCESS: 'Lấy tất cả thống kê thành công'
 }
 
 export const MEDIAS_MESSAGES = {

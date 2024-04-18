@@ -3,9 +3,11 @@ import path from 'path'
 import fsPromise from 'fs/promises'
 import { Document, ObjectId, WithId } from 'mongodb'
 import { config } from 'dotenv'
+import { countBy, flatMap } from 'lodash'
 
 import {
     FriendStatus,
+    MBTITestStatus,
     MediaTypes,
     NotificationFriendAction,
     NotificationType,
@@ -23,7 +25,7 @@ import mediaService from './medias.services'
 import notificationService from './notifications.services'
 import { hashPassword } from '~/utils/crypto'
 import { signToken, verifyToken } from '~/utils/jwt'
-import { io, socketUsers } from '~/utils/socket'
+import { io, socketDatingCallUsers, socketUsers } from '~/utils/socket'
 import { delayExecution } from '~/utils/handlers'
 
 config()
@@ -908,6 +910,96 @@ class UserService {
         ).map(({ friend }) => friend)
 
         return friends
+    }
+
+    async getAllStats() {
+        const onl_amount = Object.keys(socketUsers).length
+        const calling_amount = socketDatingCallUsers.filter((user) => user.calling_user_id).length
+
+        const [posts_amount, [{ avg_start_rating }], mbti_types, constructive_questions, review_texts] =
+            await Promise.all([
+                databaseService.posts.countDocuments(),
+                databaseService.datingReviews
+                    .aggregate<{ avg_start_rating: number }>([
+                        {
+                            $match: {}
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                avg_start_rating: {
+                                    $avg: '$stars_rating'
+                                }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0
+                            }
+                        }
+                    ])
+                    .toArray(),
+                databaseService.mbtiTests
+                    .find({
+                        status: MBTITestStatus.Completed
+                    })
+                    .toArray(),
+                databaseService.constructiveResults
+                    .aggregate<{ questions: string[] }>([
+                        {
+                            $match: {}
+                        },
+                        {
+                            $project: {
+                                questions: {
+                                    $map: {
+                                        input: '$first_user.answers',
+                                        as: 'answer',
+                                        in: '$$answer.question_id'
+                                    }
+                                }
+                            }
+                        }
+                    ])
+                    .toArray(),
+                databaseService.datingReviews.find().toArray()
+            ])
+
+        const top_mbti_types = Object.entries(countBy(mbti_types, 'mbti_type'))
+            .map(([mbti_type, amount]) => ({ mbti_type, amount }))
+            .sort((a, b) => b.amount - a.amount)
+            .filter((_, index) => index < 5)
+
+        const top_constructive_questions = (
+            await Promise.all(
+                Object.entries(countBy(flatMap(constructive_questions, (item) => item.questions))).map(
+                    async ([question_id, amount]) => {
+                        const question = await databaseService.constructiveQuestions.findOne({
+                            _id: new ObjectId(question_id)
+                        })
+
+                        return { ...question, amount }
+                    }
+                )
+            )
+        )
+            .sort((a, b) => b.amount - a.amount)
+            .filter((_, index) => index < 5)
+
+        const top_review_texts = Object.entries(countBy(flatMap(review_texts.map(({ review_texts }) => review_texts))))
+            .map(([review_text, amount]) => ({ review_text, amount }))
+            .sort((a, b) => b.amount - a.amount)
+            .filter((_, index) => index < 5)
+
+        return {
+            onl_amount,
+            posts_amount,
+            calling_amount,
+            avg_start_rating: avg_start_rating ? avg_start_rating.toFixed(2) : 0,
+            top_mbti_types,
+            top_constructive_questions,
+            top_review_texts
+        }
     }
 }
 

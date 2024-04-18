@@ -553,13 +553,16 @@ const initSocket = (httpServer: ServerHttp) => {
             }
         })
 
-        socket.on('create_dating_call', ({ user_id, dating_call }: { user_id: string; dating_call: DatingCall }) => {
-            if (socketUsers[user_id]) {
-                socketUsers[user_id].socket_ids.forEach((socket_id) =>
-                    io.to(socket_id).emit('create_dating_call', dating_call)
-                )
+        socket.on(
+            'create_dating_call',
+            ({ my_id, user_id, dating_call }: { my_id: string; user_id: string; dating_call: DatingCall }) => {
+                if (socketUsers[my_id]) {
+                    socketUsers[my_id].socket_ids
+                        .concat(socketUsers[user_id] ? socketUsers[user_id].socket_ids : [])
+                        .forEach((socket_id) => io.to(socket_id).emit('create_dating_call', dating_call))
+                }
             }
-        })
+        )
 
         socket.on(
             'dating_send_message',
