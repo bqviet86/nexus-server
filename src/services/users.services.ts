@@ -1001,6 +1001,88 @@ class UserService {
             top_review_texts
         }
     }
+
+    async getAllUsers({
+        name,
+        is_active,
+        page,
+        limit
+    }: {
+        name?: string
+        is_active?: boolean
+        page: number
+        limit: number
+    }) {
+        const [{ users, total_users }] = await databaseService.users
+            .aggregate<{
+                users: User[]
+                total_users: number
+            }>([
+                {
+                    $match: {
+                        role: UserRole.User,
+                        ...(name ? { name: new RegExp(name, 'i') } : {}),
+                        ...(is_active !== undefined ? { is_active } : {})
+                    }
+                },
+                {
+                    $facet: {
+                        users: [
+                            {
+                                $skip: limit * (page - 1)
+                            },
+                            {
+                                $limit: limit
+                            },
+                            {
+                                $project: {
+                                    password: 0
+                                }
+                            }
+                        ],
+                        total: [
+                            {
+                                $count: 'total_users'
+                            }
+                        ]
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$total',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $project: {
+                        users: '$users',
+                        total_users: '$total.total_users'
+                    }
+                }
+            ])
+            .toArray()
+
+        return {
+            users: users || [],
+            total_users: total_users || 0
+        }
+    }
+
+    async updateIsActive(user_id: string, is_active: boolean) {
+        await databaseService.users.updateOne(
+            { _id: new ObjectId(user_id) },
+            {
+                $set: {
+                    is_active
+                },
+                $currentDate: {
+                    updated_at: true
+                }
+            }
+        )
+
+        return { message: USERS_MESSAGES.UPDATE_IS_ACTIVE_SUCCESS }
+    }
 }
 
 const userService = new UserService()

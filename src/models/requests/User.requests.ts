@@ -2,6 +2,7 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import { JwtPayload } from 'jsonwebtoken'
 
 import { TokenTypes, Sex, UserRole, FriendStatus } from '~/constants/enums'
+import { PaginationReqQuery } from './Common.requests'
 
 export interface RegisterReqBody {
     name: string
@@ -70,4 +71,17 @@ export interface CancelFriendRequestReqParams extends ParamsDictionary {
 
 export interface GetAllFriendsReqParams extends ParamsDictionary {
     user_id: string
+}
+
+export interface GetAllUsersReqQuery extends PaginationReqQuery {
+    name?: string
+    is_active?: 'true' | 'false'
+}
+
+export interface UpdateIsActiveReqParams extends ParamsDictionary {
+    user_id: string
+}
+
+export interface UpdateIsActiveReqBody {
+    is_active: boolean
 }

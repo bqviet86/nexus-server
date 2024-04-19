@@ -7,6 +7,7 @@ import {
     getAllFriendSuggestionsController,
     getAllFriendsController,
     getAllStatsController,
+    getAllUsersController,
     getMeController,
     getProfileController,
     loginController,
@@ -16,14 +17,16 @@ import {
     responseFriendRequestController,
     sendFriendRequestController,
     updateAvatarController,
+    updateIsActiveController,
     updateMeController
 } from '~/controllers/users.controllers'
-import { filterMiddleware } from '~/middlewares/common.middlewares'
+import { filterMiddleware, paginationValidator } from '~/middlewares/common.middlewares'
 import {
     accessTokenValidator,
     cancelFriendRequestValidator,
     changePasswordValidator,
     getAllFriendsValidator,
+    getAllUsersValidator,
     getProfileValidator,
     isAdminValidator,
     loginValidator,
@@ -31,9 +34,10 @@ import {
     registerValidator,
     responseFriendRequestValidator,
     sendFriendRequestValidator,
+    updateIsActiveValidator,
     updateMeValidator
 } from '~/middlewares/users.middlewares'
-import { UpdateMeReqBody } from '~/models/requests/User.requests'
+import { UpdateIsActiveReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
 import { wrapRequestHandler } from '~/utils/handlers'
 
 const usersRouter = Router()
@@ -213,5 +217,38 @@ usersRouter.get(
  * Header: { Authorization: Bearer <access_token> }
  */
 usersRouter.get('/admin/stats', accessTokenValidator, isAdminValidator, wrapRequestHandler(getAllStatsController))
+
+/**
+ * Description: Get all users
+ * Path: /admin/all-users
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ * Query: { name: string, is_active?: boolean, page: number, limit: number }
+ */
+usersRouter.get(
+    '/admin/all-users',
+    accessTokenValidator,
+    isAdminValidator,
+    getAllUsersValidator,
+    paginationValidator,
+    wrapRequestHandler(getAllUsersController)
+)
+
+/**
+ * Description: Update user is_active
+ * Path: /admin/update-active-status/:user_id
+ * Method: PATCH
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { user_id: string }
+ * Body: { is_active: boolean }
+ */
+usersRouter.patch(
+    '/admin/update-active-status/:user_id',
+    accessTokenValidator,
+    isAdminValidator,
+    updateIsActiveValidator,
+    filterMiddleware<UpdateIsActiveReqBody>(['is_active']),
+    wrapRequestHandler(updateIsActiveController)
+)
 
 export default usersRouter

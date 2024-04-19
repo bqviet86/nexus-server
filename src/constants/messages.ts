@@ -51,8 +51,10 @@ export const USERS_MESSAGES = {
     USER_HAS_NOT_SENT_YOU_A_FRIEND_REQUEST: 'Người dùng chưa gửi lời mời kết bạn cho bạn',
     USER_NOT_ADMIN: 'Người dùng không phải là admin',
     SEARCH_MUST_BE_A_STRING: 'Từ khóa tìm kiếm (search) phải là một chuỗi',
+    IS_ACTIVE_MUST_BE_A_BOOLEAN: 'Trạng thái hoạt động (is_active) phải là một boolean',
 
     REGISTER_SUCCESS: 'Đăng ký thành công',
+    USER_IS_NOT_ACTIVE: 'Người dùng đã bị vô hiệu hóa',
     LOGIN_SUCCESS: 'Đăng nhập thành công',
     LOGOUT_SUCCESS: 'Đăng xuất thành công',
     EMAIL_ALREADY_VERIFIED_BEFORE: 'Email đã được xác thực trước đó',
@@ -74,7 +76,8 @@ export const USERS_MESSAGES = {
     SEND_FRIEND_REQUEST_SUCCESS: 'Gửi lời mời kết bạn thành công',
     RESPONSE_FRIEND_REQUEST_SUCCESS: 'Phản hồi lời mời kết bạn thành công',
     CANCEL_FRIEND_REQUEST_SUCCESS: 'Hủy lời mời kết bạn thành công',
-    GET_ALL_STATS_SUCCESS: 'Lấy tất cả thống kê thành công'
+    GET_ALL_STATS_SUCCESS: 'Lấy tất cả thống kê thành công',
+    UPDATE_IS_ACTIVE_SUCCESS: 'Cập nhật trạng thái hoạt động thành công'
 }
 
 export const MEDIAS_MESSAGES = {

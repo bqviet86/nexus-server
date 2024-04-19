@@ -172,6 +172,12 @@ const userIdSchema: ParamSchema = {
     }
 }
 
+const isActiveSchema: ParamSchema = {
+    isBoolean: {
+        errorMessage: USERS_MESSAGES.IS_ACTIVE_MUST_BE_A_BOOLEAN
+    }
+}
+
 export const registerValidator = validate(
     checkSchema(
         {
@@ -549,3 +555,40 @@ export const isAdminValidator = (req: Request, res: Response, next: NextFunction
 
     next()
 }
+
+export const getAllUsersValidator = validate(
+    checkSchema(
+        {
+            name: {
+                ...nameSchema,
+                optional: true
+            },
+            is_active: {
+                custom: {
+                    options: (value: string) => {
+                        if (value && !['true', 'false'].includes(value)) {
+                            throw new ErrorWithStatus({
+                                message: USERS_MESSAGES.IS_ACTIVE_MUST_BE_A_BOOLEAN,
+                                status: HTTP_STATUS.BAD_REQUEST
+                            })
+                        }
+
+                        return true
+                    }
+                },
+                optional: true
+            }
+        },
+        ['query']
+    )
+)
+
+export const updateIsActiveValidator = validate(
+    checkSchema(
+        {
+            user_id: userIdSchema,
+            is_active: isActiveSchema
+        },
+        ['body', 'params']
+    )
+)

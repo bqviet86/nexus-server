@@ -12,6 +12,7 @@ interface UserConstructor {
     password: string
     role?: UserRole
     avatar?: string
+    is_active?: boolean
     created_at?: Date
     updated_at?: Date
 }
@@ -26,6 +27,7 @@ export default class User {
     password: string
     role: UserRole
     avatar: string
+    is_active: boolean
     created_at: Date
     updated_at: Date
 
@@ -41,6 +43,7 @@ export default class User {
         this.password = user.password
         this.role = user.role || UserRole.User
         this.avatar = user.avatar || ''
+        this.is_active = user.is_active || true
         this.created_at = user.created_at || date
         this.updated_at = user.updated_at || date
     }

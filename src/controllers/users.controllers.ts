@@ -3,13 +3,13 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import { ObjectId } from 'mongodb'
 import { config } from 'dotenv'
 
-import { UserRole } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import {
     CancelFriendRequestReqParams,
     ChangePasswordReqBody,
     GetAllFriendsReqParams,
+    GetAllUsersReqQuery,
     GetProfileReqParams,
     LoginReqBody,
     LogoutReqBody,
@@ -19,6 +19,8 @@ import {
     ResponseFriendRequestReqParams,
     SendFriendRequestReqParams,
     TokenPayload,
+    UpdateIsActiveReqBody,
+    UpdateIsActiveReqParams,
     UpdateMeReqBody
 } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
@@ -36,7 +38,14 @@ export const registerController = async (req: Request<ParamsDictionary, any, Reg
 }
 
 export const loginController = async (req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) => {
-    const { _id, role } = req.user as User
+    const { _id, role, is_active } = req.user as User
+
+    if (!is_active) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+            message: USERS_MESSAGES.USER_IS_NOT_ACTIVE
+        })
+    }
+
     const result = await usersService.login({ user_id: (_id as ObjectId).toString(), role })
 
     return res.json({
@@ -185,4 +194,40 @@ export const getAllStatsController = async (req: Request, res: Response) => {
         message: USERS_MESSAGES.GET_ALL_STATS_SUCCESS,
         result
     })
+}
+
+export const getAllUsersController = async (
+    req: Request<ParamsDictionary, any, any, GetAllUsersReqQuery>,
+    res: Response
+) => {
+    const { name, is_active } = req.query
+    const page = Number(req.query.page)
+    const limit = Number(req.query.limit)
+    const { users, total_users } = await usersService.getAllUsers({
+        name,
+        is_active: is_active === 'true' ? true : is_active === 'false' ? false : undefined,
+        page,
+        limit
+    })
+
+    return res.json({
+        message: USERS_MESSAGES.GET_ALL_USERS_SUCCESS,
+        result: {
+            users,
+            page,
+            limit,
+            total_pages: Math.ceil(total_users / limit)
+        }
+    })
+}
+
+export const updateIsActiveController = async (
+    req: Request<UpdateIsActiveReqParams, any, UpdateIsActiveReqBody>,
+    res: Response
+) => {
+    const { user_id } = req.params
+    const { is_active } = req.body
+    const result = await usersService.updateIsActive(user_id, is_active)
+
+    return res.json(result)
 }
