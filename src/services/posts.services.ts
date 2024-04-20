@@ -344,9 +344,7 @@ class PostService {
                 .aggregate<{ post: Post }>([
                     {
                         $match: {
-                            _id: {
-                                $nin: previousPostIds
-                            },
+                            ...(page > 1 ? { _id: { $nin: previousPostIds } } : {}),
                             user_id: {
                                 $in: friendIds
                             }
@@ -366,9 +364,7 @@ class PostService {
                 .aggregate<{ post: Post }>([
                     {
                         $match: {
-                            _id: {
-                                $nin: previousPostIds
-                            },
+                            ...(page > 1 ? { _id: { $nin: previousPostIds } } : {}),
                             user_id: {
                                 $nin: friendIds.concat(new ObjectId(user_id))
                             }
@@ -388,7 +384,12 @@ class PostService {
             .sort((a, b) => new Date(b.created_at as Date).getTime() - new Date(a.created_at as Date).getTime())
 
         socketUsers[user_id].previous_post_ids_news_feed = socketUsers[user_id].previous_post_ids_news_feed.concat(
-            posts.map(({ _id }) => (_id as ObjectId).toString())
+            posts
+                .filter(
+                    ({ _id }) =>
+                        !socketUsers[user_id].previous_post_ids_news_feed.includes((_id as ObjectId).toString())
+                )
+                .map(({ _id }) => (_id as ObjectId).toString())
         )
 
         return { posts, total_posts }
@@ -411,9 +412,7 @@ class PostService {
                 .aggregate<{ post: Post }>([
                     {
                         $match: {
-                            _id: {
-                                $nin: previousPostIds
-                            },
+                            ...(page > 1 ? { _id: { $nin: previousPostIds } } : {}),
                             user_id: new ObjectId(profile_id)
                         }
                     },
@@ -438,7 +437,11 @@ class PostService {
         const posts = result.map(({ post }) => post)
 
         socketUsers[user_id].previous_post_ids_profile = socketUsers[user_id].previous_post_ids_profile.concat(
-            posts.map(({ _id }) => (_id as ObjectId).toString())
+            posts
+                .filter(
+                    ({ _id }) => !socketUsers[user_id].previous_post_ids_profile.includes((_id as ObjectId).toString())
+                )
+                .map(({ _id }) => (_id as ObjectId).toString())
         )
 
         return { posts, total_posts }

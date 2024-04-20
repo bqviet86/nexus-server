@@ -223,7 +223,7 @@ usersRouter.get('/admin/stats', accessTokenValidator, isAdminValidator, wrapRequ
  * Path: /admin/all-users
  * Method: GET
  * Header: { Authorization: Bearer <access_token> }
- * Query: { name: string, is_active?: boolean, page: number, limit: number }
+ * Query: { name?: string, is_active?: boolean, page: number, limit: number }
  */
 usersRouter.get(
     '/admin/all-users',

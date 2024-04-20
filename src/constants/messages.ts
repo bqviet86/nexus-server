@@ -202,6 +202,13 @@ export const MBTI_TEST_MESSAGES = {
     DELETE_MBTI_TEST_SUCCESS: 'Xóa bài trắc nghiệm MBTI thành công'
 }
 
+export const CONSTRUCTIVE_QUESTIONS_MESSAGES = {
+    GET_ALL_CONSTRUCTIVE_QUESTIONS_SUCCESS: 'Lấy tất cả câu hỏi kiến tạo thành công',
+    CREATE_CONSTRUCTIVE_QUESTION_SUCCESS: 'Tạo câu hỏi kiến tạo thành công',
+    UPDATE_CONSTRUCTIVE_QUESTION_SUCCESS: 'Cập nhật câu hỏi kiến tạo thành công',
+    DELETE_CONSTRUCTIVE_QUESTION_SUCCESS: 'Xóa câu hỏi kiến tạo thành công'
+}
+
 export const CONSTRUCTIVE_RESULTS_MESSAGES = {
     DATING_USER_ID_INVALID: 'ID người dùng hẹn hò không hợp lệ',
     NOT_ALLOWED_TO_CREATE_RESULT: 'Không được phép tạo trò chơi kiến tạo',
