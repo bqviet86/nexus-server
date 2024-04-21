@@ -183,6 +183,13 @@ export const DATING_CRITERIAS_MESSAGES = {
     UPDATE_DATING_CRITERIA_SUCCESSFULLY: 'Cập nhật tiêu chí hẹn hò thành công'
 }
 
+export const MBTI_QUESTION_MESSAGES = {
+    GET_ALL_MBTI_QUESTIONS_SUCCESS: 'Lấy tất cả câu hỏi MBTI thành công',
+    CREATE_MBTI_QUESTION_SUCCESS: 'Tạo câu hỏi MBTI thành công',
+    UPDATE_MBTI_QUESTION_SUCCESS: 'Cập nhật câu hỏi MBTI thành công',
+    DELETE_MBTI_QUESTION_SUCCESS: 'Xóa câu hỏi MBTI thành công'
+}
+
 export const MBTI_TEST_MESSAGES = {
     INVALID_MBTI_TEST_ID: 'ID bài trắc nghiệm MBTI không hợp lệ',
     MBTI_TEST_NOT_FOUND: 'Không tìm thấy bài trắc nghiệm MBTI',

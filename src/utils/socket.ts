@@ -17,9 +17,9 @@ import commentService from '~/services/comments.services'
 import notificationService from '~/services/notifications.services'
 import databaseService from '~/services/database.services'
 import datingUserService from '~/services/datingUsers.services'
+import datingConversationService from '~/services/datingConversations.services'
 import { verifyAccessToken } from './commons'
 import { delayExecution } from './handlers'
-import datingConversationService from '~/services/datingConversations.services'
 
 type UserSocket = {
     socket_ids: string[]

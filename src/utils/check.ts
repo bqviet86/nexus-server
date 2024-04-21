@@ -1,5 +1,5 @@
-import { MediaTypes } from '~/constants/enums'
-import { Media } from '~/models/Types'
+import { MBTIValue, MediaTypes } from '~/constants/enums'
+import { MBTIOption, Media } from '~/models/Types'
 import { stringEnumToArray } from './commons'
 
 export const isMedia = (variable: any): variable is Media => {
@@ -10,5 +10,16 @@ export const isMedia = (variable: any): variable is Media => {
         typeof variable?.url === 'string' &&
         typeof variable?.type === 'string' &&
         mediaTypes.includes(variable?.type)
+    )
+}
+
+export const isMBTIOption = (variable: any): variable is MBTIOption => {
+    const mbtiValues = stringEnumToArray(MBTIValue)
+
+    return (
+        typeof variable === 'object' &&
+        typeof variable?.option === 'string' &&
+        typeof variable?.dimension_value === 'string' &&
+        mbtiValues.includes(variable?.dimension_value)
     )
 }
