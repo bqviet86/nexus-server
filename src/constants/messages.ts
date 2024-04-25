@@ -145,6 +145,14 @@ export const LIKES_MESSAGES = {
     UNLIKE_POST_SUCCESSFULLY: 'Unlike post thành công'
 }
 
+export const CONVERSATIONS_MESSAGES = {
+    INVALID_RECEIVER_ID: 'ID người nhận không hợp lệ',
+    RECEIVER_NOT_FOUND: 'Không tìm thấy người nhận',
+
+    GET_ALL_CONVERSATIONS_SUCCESSFULLY: 'Lấy tất cả cuộc trò chuyện thành công',
+    GET_CONVERSATION_SUCCESSFULLY: 'Lấy cuộc trò chuyện thành công'
+}
+
 export const DATING_USERS_MESSAGES = {
     ID_IS_INVALID: 'ID không hợp lệ',
     DATING_PROFILE_NOT_FOUND: 'Không tìm thấy hồ sơ hẹn hò',

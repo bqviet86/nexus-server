@@ -11,6 +11,7 @@ import postsRouter from './routes/posts.routes'
 import notificationsRouter from './routes/notifications.routes'
 import commentsRouter from './routes/comments.routes'
 import likesRouter from './routes/likes.routes'
+import conversationsRouter from './routes/conversations.routes'
 import datingUsersRouter from './routes/datingUsers.routes'
 import datingCriteriasRouter from './routes/datingCriterias.routes'
 import provincesRouter from './routes/provinces.routes'
@@ -55,6 +56,7 @@ app.use('/posts', postsRouter)
 app.use('/notifications', notificationsRouter)
 app.use('/comments', commentsRouter)
 app.use('/likes', likesRouter)
+app.use('/conversations', conversationsRouter)
 app.use('/dating-users', datingUsersRouter)
 app.use('/dating-criterias', datingCriteriasRouter)
 app.use('/provinces', provincesRouter)

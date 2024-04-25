@@ -10,6 +10,7 @@ import Notification from '~/models/schemas/Notification.schema'
 import Friend from '~/models/schemas/Friend.schema'
 import Comment from '~/models/schemas/Comment.schema'
 import Like from '~/models/schemas/Like.schema'
+import Conversation from '~/models/schemas/Conversation.schema'
 import DatingUser from '~/models/schemas/DatingUser.schema'
 import DatingCriteria from '~/models/schemas/DatingCriteria.schema'
 import Province from '~/models/schemas/Province.schema'
@@ -77,6 +78,10 @@ class DatabaseService {
 
     get likes(): Collection<Like> {
         return this.db.collection(process.env.DB_LIKES_COLLECTION as string)
+    }
+
+    get conversations(): Collection<Conversation> {
+        return this.db.collection(process.env.DB_CONVERSATIONS_COLLECTION as string)
     }
 
     get datingUsers(): Collection<DatingUser> {

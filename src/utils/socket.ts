@@ -9,12 +9,14 @@ import MBTI_COMPATIBILITY from '~/constants/mbtiCompatibility'
 import { TokenPayload } from '~/models/requests/User.requests'
 import Comment from '~/models/schemas/Comment.schema'
 import Post from '~/models/schemas/Post.schema'
+import Conversation from '~/models/schemas/Conversation.schema'
 import DatingUser from '~/models/schemas/DatingUser.schema'
 import DatingCriteria from '~/models/schemas/DatingCriteria.schema'
 import DatingCall from '~/models/schemas/DatingCall.schema'
 import DatingConversation from '~/models/schemas/DatingConversation.schema'
 import commentService from '~/services/comments.services'
 import notificationService from '~/services/notifications.services'
+import conversationService from '~/services/conversations.services'
 import databaseService from '~/services/database.services'
 import datingUserService from '~/services/datingUsers.services'
 import datingConversationService from '~/services/datingConversations.services'
@@ -208,6 +210,43 @@ const initSocket = (httpServer: ServerHttp) => {
                         }
                     })
                 }, 300)
+            }
+        )
+
+        socket.on(
+            'send_message',
+            async ({
+                sender_id,
+                receiver_id,
+                content
+            }: {
+                sender_id: string
+                receiver_id: string
+                content: string
+            }) => {
+                const result = await databaseService.conversations.insertOne(
+                    new Conversation({
+                        sender_id: new ObjectId(sender_id),
+                        receiver_id: new ObjectId(receiver_id),
+                        content: content
+                    })
+                )
+                const [conversation] = await databaseService.conversations
+                    .aggregate<Conversation>([
+                        {
+                            $match: {
+                                _id: result.insertedId
+                            }
+                        },
+                        ...conversationService.commonAggregateConversations
+                    ])
+                    .toArray()
+
+                if (socketUsers[sender_id]) {
+                    socketUsers[sender_id].socket_ids
+                        .concat(socketUsers[receiver_id] ? socketUsers[receiver_id].socket_ids : [])
+                        .forEach((socket_id) => io.to(socket_id).emit('receive_message', conversation))
+                }
             }
         )
 
