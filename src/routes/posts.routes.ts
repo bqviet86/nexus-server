@@ -5,17 +5,20 @@ import {
     deletePostController,
     getNewsFeedController,
     getPostController,
-    getProfilePostsController
+    getProfilePostsController,
+    updatePostController
 } from '~/controllers/posts.controllers'
-import { paginationValidator } from '~/middlewares/common.middlewares'
+import { filterMiddleware, paginationValidator } from '~/middlewares/common.middlewares'
 import {
     createPostValidator,
     deletePostValidator,
     getPostValidator,
     getProfilePostsValidator,
-    toLowerCaseHashTags
+    toLowerCaseHashTags,
+    updatePostValidator
 } from '~/middlewares/posts.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
+import { UpdatePostReqBody } from '~/models/requests/Post.requests'
 import { wrapRequestHandler } from '~/utils/handlers'
 
 const postsRouter = Router()
@@ -67,6 +70,23 @@ postsRouter.get(
  * Params: { post_id: string }
  */
 postsRouter.get('/:post_id', accessTokenValidator, getPostValidator, wrapRequestHandler(getPostController))
+
+/**
+ * Description: Update a post
+ * Path: /:post_id
+ * Method: PATCH
+ * Headers: { Authorization: Bearer <access token> }
+ * Params: { post_id: string }
+ * Body: UpdatePostReqBody
+ */
+postsRouter.patch(
+    '/:post_id',
+    accessTokenValidator,
+    updatePostValidator,
+    toLowerCaseHashTags,
+    filterMiddleware<UpdatePostReqBody>(['content', 'hashtags', 'medias']),
+    wrapRequestHandler(updatePostController)
+)
 
 /**
  * Description: Delete a post

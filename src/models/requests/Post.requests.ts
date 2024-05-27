@@ -19,6 +19,16 @@ export interface GetProfilePostsReqParams extends ParamsDictionary {
     profile_id: string
 }
 
+export interface UpdatePostReqParams extends ParamsDictionary {
+    post_id: string
+}
+
+export interface UpdatePostReqBody {
+    content: string
+    hashtags: string[]
+    medias: Media[]
+}
+
 export interface DeletePostReqParams extends ParamsDictionary {
     post_id: string
 }

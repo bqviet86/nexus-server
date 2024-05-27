@@ -102,11 +102,11 @@ usersRouter.get('/:profile_id', accessTokenValidator, getProfileValidator, wrapR
 
 /**
  * Description: Update my avatar
- * Path: /avatar
+ * Path: /update-avatar
  * Method: PATCH
  * Body: { image: max 1 file }
  */
-usersRouter.patch('/avatar', accessTokenValidator, wrapRequestHandler(updateAvatarController))
+usersRouter.patch('/update-avatar', accessTokenValidator, wrapRequestHandler(updateAvatarController))
 
 /**
  * Description: Update my info

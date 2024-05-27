@@ -9,7 +9,7 @@ import {
     PostType,
     VideoEncodingStatus
 } from '~/constants/enums'
-import { CreatePostReqBody } from '~/models/requests/Post.requests'
+import { CreatePostReqBody, UpdatePostReqBody } from '~/models/requests/Post.requests'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import Post from '~/models/schemas/Post.schema'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
@@ -241,7 +241,16 @@ class PostService {
                 hashtags
             })
         )
-        const post = (await databaseService.posts.findOne({ _id: result.insertedId })) as WithId<Post>
+        const [{ post }] = await databaseService.posts
+            .aggregate<{ post: Post }>([
+                {
+                    $match: {
+                        _id: result.insertedId
+                    }
+                },
+                ...this.commonAggregatePosts(user_id)
+            ])
+            .toArray()
 
         // Check video status
         const videos = payload.medias.filter((media) => media.type === MediaTypes.Video)
@@ -284,9 +293,9 @@ class PostService {
             }, 5000)
         }
 
-        if (post.type === PostType.Share) {
+        if (post.type === PostType.Share && parent_post) {
             // Create id user of parent post
-            const user_to_id = (parent_post as Post).user_id.toString()
+            const user_to_id = parent_post.user_id.toString()
             const notification = await notificationService.createNotification({
                 user_from_id: user_id,
                 user_to_id,
@@ -302,7 +311,7 @@ class PostService {
                     socketUsers[user_to_id].socket_ids.forEach((socket_id) => {
                         io.to(socket_id).emit(NotificationPostAction.SharePost, {
                             notification,
-                            post_id: post._id.toString()
+                            post_id: post._id
                         })
                     })
                 }
@@ -427,7 +436,12 @@ class PostService {
                     {
                         $limit: limit
                     },
-                    ...this.commonAggregatePosts(profile_id)
+                    ...this.commonAggregatePosts(profile_id),
+                    {
+                        $sort: {
+                            'post.created_at': -1
+                        }
+                    }
                 ])
                 .toArray(),
             databaseService.posts.countDocuments({
@@ -445,6 +459,39 @@ class PostService {
         )
 
         return { posts, total_posts }
+    }
+
+    async updatePost(post_id: string, user_id: string, payload: UpdatePostReqBody) {
+        const hashtags = await this.checkAndCreateHashtag(payload.hashtags)
+
+        await databaseService.posts.updateOne(
+            {
+                _id: new ObjectId(post_id),
+                user_id: new ObjectId(user_id)
+            },
+            {
+                $set: {
+                    ...payload,
+                    hashtags
+                },
+                $currentDate: {
+                    updated_at: true
+                }
+            }
+        )
+
+        const [{ post }] = await databaseService.posts
+            .aggregate<{ post: Post }>([
+                {
+                    $match: {
+                        _id: new ObjectId(post_id)
+                    }
+                },
+                ...this.commonAggregatePosts(user_id)
+            ])
+            .toArray()
+
+        return post
     }
 
     async deletePost(post_id: string, user_id: string) {

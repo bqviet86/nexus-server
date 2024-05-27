@@ -10,6 +10,7 @@ import { TokenPayload } from '~/models/requests/User.requests'
 import Comment from '~/models/schemas/Comment.schema'
 import Post from '~/models/schemas/Post.schema'
 import Conversation from '~/models/schemas/Conversation.schema'
+import Notification from '~/models/schemas/Notification.schema'
 import DatingUser from '~/models/schemas/DatingUser.schema'
 import DatingCriteria from '~/models/schemas/DatingCriteria.schema'
 import DatingCall from '~/models/schemas/DatingCall.schema'
@@ -191,15 +192,19 @@ const initSocket = (httpServer: ServerHttp) => {
                         _id: new ObjectId(data.post_id)
                     })
                 ])
-                const notification = await notificationService.createNotification({
-                    user_from_id: user_id,
-                    user_to_id: (post as Post).user_id.toString(),
-                    type: NotificationType.Post,
-                    action: NotificationPostAction.CommentPost,
-                    payload: {
-                        post_id: (post as Post)._id
-                    }
-                })
+                let notification: Notification | null = null
+
+                if (user_id !== (post as Post).user_id.toString()) {
+                    notification = await notificationService.createNotification({
+                        user_from_id: user_id,
+                        user_to_id: (post as Post).user_id.toString(),
+                        type: NotificationType.Post,
+                        action: NotificationPostAction.CommentPost,
+                        payload: {
+                            post_id: (post as Post)._id
+                        }
+                    })
+                }
 
                 await delayExecution(() => {
                     Object.keys(socketUsers).forEach((userId) => {
@@ -399,6 +404,10 @@ const initSocket = (httpServer: ServerHttp) => {
                         { user_score: number; my_score: number; mbti_score: number | null; total_score: number }
                     > = {}
 
+                    console.log('\n------------------------------------------------------------------------\n')
+
+                    console.log(`${myProfile.name} match to ${userProfiles.length} users`)
+
                     userProfiles.forEach((userProfile, index) => {
                         const user_score = calculateCriteriaScore(userProfile, myCriteria)
                         const my_score = calculateCriteriaScore(myProfile, userCriterias[index])
@@ -415,9 +424,14 @@ const initSocket = (httpServer: ServerHttp) => {
                             mbti_score,
                             total_score: user_score + my_score + (mbti_score ?? 0)
                         }
+
+                        console.log(
+                            `   + ${myProfile.name} vs ${userProfile.name}:`,
+                            scores[userProfile.user_id.toString()]
+                        )
                     })
 
-                    console.log('scores', scores)
+                    console.log('\n------------------------------------------------------------------------\n')
 
                     const userProfilesMatched = userProfiles.filter((userProfile) => {
                         const userId = userProfile.user_id.toString()

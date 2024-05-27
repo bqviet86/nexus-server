@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
-import { checkSchema } from 'express-validator'
+import { ParamSchema, checkSchema } from 'express-validator'
 import { ObjectId } from 'mongodb'
 import { isArray, isEmpty } from 'lodash'
 
@@ -19,6 +19,102 @@ import { validate } from '~/utils/validation'
 
 const postTypeValues = stringEnumToArray(PostType)
 
+const postIdSchema: ParamSchema = {
+    isString: true,
+    custom: {
+        options: async (value, { req }) => {
+            if (!ObjectId.isValid(value)) {
+                throw new ErrorWithStatus({
+                    message: POSTS_MESSAGES.INVALID_POST_ID,
+                    status: HTTP_STATUS.BAD_REQUEST
+                })
+            }
+
+            const { user_id } = req.decoded_authorization as TokenPayload
+            const post = await databaseService.posts.findOne({
+                _id: new ObjectId(value)
+            })
+
+            if (post === null) {
+                throw new ErrorWithStatus({
+                    message: POSTS_MESSAGES.POST_NOT_FOUND,
+                    status: HTTP_STATUS.NOT_FOUND
+                })
+            }
+
+            if (post.user_id.toString() !== user_id) {
+                throw new ErrorWithStatus({
+                    message: POSTS_MESSAGES.NOT_HAVE_PERMISSION,
+                    status: HTTP_STATUS.FORBIDDEN
+                })
+            }
+
+            return true
+        }
+    }
+}
+
+const contentSchema: ParamSchema = {
+    isString: true,
+    custom: {
+        options: (value: string, { req }) => {
+            const { medias, type } = req.body as CreatePostReqBody
+
+            // Nếu type là share thì content không được rỗng khi không có media
+            if (type === PostType.Post && isEmpty(value) && isEmpty(medias)) {
+                throw new ErrorWithStatus({
+                    message: POSTS_MESSAGES.CONTENT_MUST_NOT_BE_EMPTY,
+                    status: HTTP_STATUS.BAD_REQUEST
+                })
+            }
+
+            return true
+        }
+    }
+}
+
+const hashTagsSchema: ParamSchema = {
+    isArray: true,
+    custom: {
+        options: (value: any[]) => {
+            // hashtags phải là mảng các string
+            if (value.some((hashtag) => typeof hashtag !== 'string')) {
+                throw new ErrorWithStatus({
+                    message: POSTS_MESSAGES.HASHTAGS_MUST_BE_AN_ARRAY_OF_STRING,
+                    status: HTTP_STATUS.BAD_REQUEST
+                })
+            }
+
+            return true
+        }
+    }
+}
+
+const mediaSchema: ParamSchema = {
+    isArray: true,
+    custom: {
+        options: (value: any[], { req }) => {
+            const { type } = req.body as CreatePostReqBody
+
+            if (type === PostType.Post && value.some((media) => !isMedia(media))) {
+                throw new ErrorWithStatus({
+                    message: POSTS_MESSAGES.MEDIAS_MUST_BE_AN_ARRAY_OF_MEDIA_OBJECT,
+                    status: HTTP_STATUS.BAD_REQUEST
+                })
+            }
+
+            if (type === PostType.Share && !isEmpty(value)) {
+                throw new ErrorWithStatus({
+                    message: POSTS_MESSAGES.MEDIAS_MUST_BE_EMPTY,
+                    status: HTTP_STATUS.BAD_REQUEST
+                })
+            }
+
+            return true
+        }
+    }
+}
+
 export const createPostValidator = validate(
     checkSchema(
         {
@@ -28,24 +124,7 @@ export const createPostValidator = validate(
                     errorMessage: POSTS_MESSAGES.INVALID_TYPE
                 }
             },
-            content: {
-                isString: true,
-                custom: {
-                    options: (value: string, { req }) => {
-                        const { medias, type } = req.body as CreatePostReqBody
-
-                        // Nếu type là share thì content không được rỗng khi không có media
-                        if (type === PostType.Post && isEmpty(value) && isEmpty(medias)) {
-                            throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.CONTENT_MUST_NOT_BE_EMPTY,
-                                status: HTTP_STATUS.BAD_REQUEST
-                            })
-                        }
-
-                        return true
-                    }
-                }
-            },
+            content: contentSchema,
             parent_id: {
                 custom: {
                     options: async (value, { req }) => {
@@ -92,46 +171,8 @@ export const createPostValidator = validate(
                     }
                 }
             },
-            hashtags: {
-                isArray: true,
-                custom: {
-                    options: (value: any[]) => {
-                        // hashtags phải là mảng các string
-                        if (value.some((hashtag) => typeof hashtag !== 'string')) {
-                            throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.HASHTAGS_MUST_BE_AN_ARRAY_OF_STRING,
-                                status: HTTP_STATUS.BAD_REQUEST
-                            })
-                        }
-
-                        return true
-                    }
-                }
-            },
-            medias: {
-                isArray: true,
-                custom: {
-                    options: (value: any[], { req }) => {
-                        const { type } = req.body as CreatePostReqBody
-
-                        if (type === PostType.Post && value.some((media) => !isMedia(media))) {
-                            throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.MEDIAS_MUST_BE_AN_ARRAY_OF_MEDIA_OBJECT,
-                                status: HTTP_STATUS.BAD_REQUEST
-                            })
-                        }
-
-                        if (type === PostType.Share && !isEmpty(value)) {
-                            throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.MEDIAS_MUST_BE_EMPTY,
-                                status: HTTP_STATUS.BAD_REQUEST
-                            })
-                        }
-
-                        return true
-                    }
-                }
-            }
+            hashtags: hashTagsSchema,
+            medias: mediaSchema
         },
         ['body']
     )
@@ -228,43 +269,22 @@ export const getPostValidator = validate(
     )
 )
 
+export const updatePostValidator = validate(
+    checkSchema(
+        {
+            post_id: postIdSchema,
+            content: contentSchema,
+            hashtags: hashTagsSchema,
+            medias: mediaSchema
+        },
+        ['body', 'params']
+    )
+)
+
 export const deletePostValidator = validate(
     checkSchema(
         {
-            post_id: {
-                isString: true,
-                custom: {
-                    options: async (value, { req }) => {
-                        if (!ObjectId.isValid(value)) {
-                            throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.INVALID_POST_ID,
-                                status: HTTP_STATUS.BAD_REQUEST
-                            })
-                        }
-
-                        const { user_id } = req.decoded_authorization as TokenPayload
-                        const post = await databaseService.posts.findOne({
-                            _id: new ObjectId(value)
-                        })
-
-                        if (post === null) {
-                            throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.POST_NOT_FOUND,
-                                status: HTTP_STATUS.NOT_FOUND
-                            })
-                        }
-
-                        if (post.user_id.toString() !== user_id) {
-                            throw new ErrorWithStatus({
-                                message: POSTS_MESSAGES.NOT_HAVE_PERMISSION_TO_DELETE_POST,
-                                status: HTTP_STATUS.FORBIDDEN
-                            })
-                        }
-
-                        return true
-                    }
-                }
-            }
+            post_id: postIdSchema
         },
         ['params']
     )

@@ -106,12 +106,13 @@ export const POSTS_MESSAGES = {
     PROFILE_NOT_FOUND: 'Không tìm thấy profile',
     INVALID_POST_ID: 'ID post không hợp lệ',
     POST_NOT_FOUND: 'Không tìm thấy post',
-    NOT_HAVE_PERMISSION_TO_DELETE_POST: 'Bạn không có quyền xóa post này',
+    NOT_HAVE_PERMISSION: 'Bạn không có quyền thực hiện hành động này',
 
     CREATE_POST_SUCCESSFULLY: 'Tạo post thành công',
     GET_POST_SUCCESSFULLY: 'Lấy post thành công',
     GET_NEWS_FEED_SUCCESSFULLY: 'Lấy news feed thành công',
     GET_PROFILE_POSTS_SUCCESSFULLY: 'Lấy tất cả post của profile thành công',
+    UPDATE_POST_SUCCESSFULLY: 'Cập nhật post thành công',
     DELETE_POST_SUCCESSFULLY: 'Xóa post thành công'
 }
 

@@ -7,7 +7,9 @@ import {
     CreatePostReqBody,
     DeletePostReqParams,
     GetPostReqParams,
-    GetProfilePostsReqParams
+    GetProfilePostsReqParams,
+    UpdatePostReqBody,
+    UpdatePostReqParams
 } from '~/models/requests/Post.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
 import Post from '~/models/schemas/Post.schema'
@@ -71,6 +73,20 @@ export const getProfilePostsController = async (
             limit,
             total_pages: Math.ceil(total_posts / limit)
         }
+    })
+}
+
+export const updatePostController = async (
+    req: Request<UpdatePostReqParams, any, UpdatePostReqBody>,
+    res: Response
+) => {
+    const { post_id } = req.params
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const result = await postService.updatePost(post_id, user_id, req.body)
+
+    return res.json({
+        message: POSTS_MESSAGES.UPDATE_POST_SUCCESSFULLY,
+        result
     })
 }
 

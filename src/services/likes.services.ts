@@ -4,6 +4,7 @@ import { LIKES_MESSAGES } from '~/constants/messages'
 import { NotificationPostAction, NotificationType } from '~/constants/enums'
 import Like from '~/models/schemas/Like.schema'
 import Post from '~/models/schemas/Post.schema'
+import Notification from '~/models/schemas/Notification.schema'
 import databaseService from './database.services'
 import notificationService from './notifications.services'
 import { io, socketUsers } from '~/utils/socket'
@@ -19,15 +20,19 @@ class LikeService {
         )
 
         const user_to_id = post.user_id.toString()
-        const notification = await notificationService.createNotification({
-            user_from_id: user_id,
-            user_to_id,
-            type: NotificationType.Post,
-            action: NotificationPostAction.LikePost,
-            payload: {
-                post_id: post._id
-            }
-        })
+        let notification: Notification | null = null
+
+        if (user_id !== user_to_id) {
+            notification = await notificationService.createNotification({
+                user_from_id: user_id,
+                user_to_id,
+                type: NotificationType.Post,
+                action: NotificationPostAction.LikePost,
+                payload: {
+                    post_id: post._id
+                }
+            })
+        }
 
         await delayExecution(() => {
             Object.keys(socketUsers).forEach((userId) => {

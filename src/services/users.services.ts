@@ -1,6 +1,4 @@
 import { Request } from 'express'
-import path from 'path'
-import fsPromise from 'fs/promises'
 import { Document, ObjectId, WithId } from 'mongodb'
 import { config } from 'dotenv'
 import { countBy, flatMap } from 'lodash'
@@ -14,7 +12,6 @@ import {
     TokenTypes,
     UserRole
 } from '~/constants/enums'
-import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
@@ -541,17 +538,6 @@ class UserService {
     }
 
     async updateAvatar(user_id: string, req: Request) {
-        // Xoá avatar cũ
-        const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
-        const avatar = user && user.avatar
-
-        if (avatar) {
-            const avatar_path = path.resolve(UPLOAD_IMAGE_DIR, avatar)
-
-            await fsPromise.unlink(avatar_path)
-        }
-
-        // Lưu avatar mới
         const [media] = await mediaService.uploadImage({
             req,
             maxFiles: 1, // 1 file
