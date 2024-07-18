@@ -9,6 +9,7 @@ import { config } from 'dotenv'
 import { FriendStatus, Sex, UserRole } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
+import { envConfig } from '~/constants/config'
 import { ErrorWithStatus } from '~/models/Errors'
 import { LoginReqBody, TokenPayload } from '~/models/requests/User.requests'
 import Friend from '~/models/schemas/Friend.schema'
@@ -282,7 +283,7 @@ export const refreshTokenValidator = validate(
                             const [decoded_refresh_token, refresh_token] = await Promise.all([
                                 verifyToken({
                                     token: value,
-                                    secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
+                                    secretOrPublicKey: envConfig.jwtSecretRefreshToken
                                 }),
                                 databaseService.refreshTokens.findOne({ token: value })
                             ])

@@ -3,6 +3,7 @@ import { Server } from 'socket.io'
 import { ExtendedError } from 'socket.io/dist/namespace'
 import { ObjectId } from 'mongodb'
 
+import { envConfig } from '~/constants/config'
 import { MBTIType, NotificationPostAction, NotificationType } from '~/constants/enums'
 import { CRITERIA_PASS_SCORE, CRITERIA_SCORES, MBTI_COMPATIBILITY_SCORES } from '~/constants/scores'
 import MBTI_COMPATIBILITY from '~/constants/mbtiCompatibility'
@@ -42,7 +43,7 @@ export let socketDatingCallUsers: {
 const initSocket = (httpServer: ServerHttp) => {
     io = new Server(httpServer, {
         cors: {
-            origin: process.env.CLIENT_URL
+            origin: envConfig.clientUrl
         }
     })
 

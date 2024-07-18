@@ -13,6 +13,7 @@ import {
     UserRole
 } from '~/constants/enums'
 import { USERS_MESSAGES } from '~/constants/messages'
+import { envConfig } from '~/constants/config'
 import { RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
@@ -74,9 +75,9 @@ class UserService {
                 role,
                 token_type: TokenTypes.AccessToken
             },
-            privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
+            privateKey: envConfig.jwtSecretAccessToken,
             options: {
-                expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN
+                expiresIn: envConfig.accessTokenExpireIn
             }
         })
     }
@@ -90,7 +91,7 @@ class UserService {
                     token_type: TokenTypes.RefreshToken,
                     exp
                 },
-                privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
+                privateKey: envConfig.jwtSecretRefreshToken
             })
         }
 
@@ -100,9 +101,9 @@ class UserService {
                 role,
                 token_type: TokenTypes.RefreshToken
             },
-            privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
+            privateKey: envConfig.jwtSecretRefreshToken,
             options: {
-                expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN
+                expiresIn: envConfig.refreshTokenExpireIn
             }
         })
     }
@@ -114,7 +115,7 @@ class UserService {
     private decodeRefreshToken(refresh_token: string) {
         return verifyToken({
             token: refresh_token,
-            secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
+            secretOrPublicKey: envConfig.jwtSecretRefreshToken
         })
     }
 

@@ -1,8 +1,10 @@
 import express from 'express'
 import { createServer } from 'http'
 import { config } from 'dotenv'
+import helmet from 'helmet'
 import cors from 'cors'
 
+import { envConfig } from '~/constants/config'
 import { UPLOAD_IMAGE_TEMP_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
 import { defaultErrorHandler } from '~/middlewares/error.middlewares'
 import usersRouter from '~/routes/users.routes'
@@ -29,7 +31,7 @@ import initSocket from './utils/socket'
 
 config()
 
-const port = process.env.PORT || 4000
+const port = envConfig.port
 const app = express()
 const httpServer = createServer(app)
 
@@ -42,9 +44,10 @@ databaseService.connect()
 
 // Middlewares
 app.use(express.json())
+app.use(helmet())
 app.use(
     cors({
-        origin: process.env.CLIENT_URL,
+        origin: envConfig.clientUrl,
         credentials: true
     })
 )
