@@ -1,6 +1,28 @@
 import { config } from 'dotenv'
+import fs from 'fs'
+import path from 'path'
 
-config()
+const env = process.env.NODE_ENV
+const envFilename = `.env.${env}`
+
+if (!env) {
+    console.log(`You haven't provided NODE_ENV environment variable (e.g: development, production)`)
+    console.log(`NODE_ENV = '${env}'`)
+    process.exit(1)
+}
+
+if (!fs.existsSync(path.resolve(envFilename))) {
+    console.log(`Cannot find ${envFilename} file`)
+    process.exit(1)
+}
+
+console.log(`NODE_ENV = '${env}', app will use ${envFilename} file`)
+
+config({
+    path: envFilename
+})
+
+export const isProduction = env === 'production'
 
 export const envConfig = {
     // Server info

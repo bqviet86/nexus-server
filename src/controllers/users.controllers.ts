@@ -1,7 +1,6 @@
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { ObjectId } from 'mongodb'
-import { config } from 'dotenv'
 
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
@@ -25,8 +24,6 @@ import {
 } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import usersService from '~/services/users.services'
-
-config()
 
 export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
     const result = await usersService.register(req.body)

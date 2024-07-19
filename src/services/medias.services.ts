@@ -1,5 +1,4 @@
 import { Request } from 'express'
-import { config } from 'dotenv'
 import fsPromise from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
@@ -15,8 +14,6 @@ import { getFiles, getNameFromFilename, handleUploadImage, handleUploadVideo } f
 import { uploadToS3 } from '~/utils/s3'
 import { encodeHLSWithMultipleVideoStreams } from '~/utils/video'
 import { deleteFolder } from '~/utils/dir'
-
-config()
 
 class EncodeQueue {
     items: string[]

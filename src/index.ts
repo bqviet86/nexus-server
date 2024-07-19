@@ -1,10 +1,10 @@
 import express from 'express'
 import { createServer } from 'http'
-import { config } from 'dotenv'
 import helmet from 'helmet'
-import cors from 'cors'
+import cors, { CorsOptions } from 'cors'
+import { Options as RateLimitOptions, rateLimit } from 'express-rate-limit'
 
-import { envConfig } from '~/constants/config'
+import { envConfig, isProduction } from '~/constants/config'
 import { UPLOAD_IMAGE_TEMP_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
 import { defaultErrorHandler } from '~/middlewares/error.middlewares'
 import usersRouter from '~/routes/users.routes'
@@ -29,9 +29,6 @@ import databaseService from '~/services/database.services'
 import { initFolder } from './utils/file'
 import initSocket from './utils/socket'
 
-config()
-
-const port = envConfig.port
 const app = express()
 const httpServer = createServer(app)
 
@@ -45,12 +42,22 @@ databaseService.connect()
 // Middlewares
 app.use(express.json())
 app.use(helmet())
-app.use(
-    cors({
-        origin: envConfig.clientUrl,
-        credentials: true
-    })
-)
+
+const corsOptions: CorsOptions = {
+    origin: isProduction ? envConfig.clientUrl : '*',
+    credentials: true
+}
+
+app.use(cors(corsOptions))
+
+const limitOptions: Partial<RateLimitOptions> = {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+    standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+    legacyHeaders: false // Disable the `X-RateLimit-*` headers.
+}
+
+app.use(rateLimit(limitOptions))
 
 // Routes
 app.use('/users', usersRouter)
@@ -79,4 +86,4 @@ app.use(defaultErrorHandler)
 initSocket(httpServer)
 
 // Listen
-httpServer.listen(port, () => console.log(`Listen on http://localhost:${port}`))
+httpServer.listen(envConfig.port, () => console.log(`Listening on port ${envConfig.port}`))

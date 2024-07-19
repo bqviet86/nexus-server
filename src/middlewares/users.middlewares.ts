@@ -4,7 +4,6 @@ import { ParamSchema, checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize } from 'lodash'
 import { ObjectId } from 'mongodb'
-import { config } from 'dotenv'
 
 import { FriendStatus, Sex, UserRole } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
@@ -19,8 +18,6 @@ import { hashPassword } from '~/utils/crypto'
 import { stringEnumToArray, verifyAccessToken } from '~/utils/commons'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
-
-config()
 
 const sexValues = stringEnumToArray(Sex)
 

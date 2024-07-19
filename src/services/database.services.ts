@@ -1,5 +1,4 @@
 import { MongoClient, Db, Collection } from 'mongodb'
-import { config } from 'dotenv'
 
 import { envConfig } from '~/constants/config'
 import User from '~/models/schemas/User.schema'
@@ -22,8 +21,6 @@ import ConstructiveResult from '~/models/schemas/ConstructiveResult.schema'
 import DatingCall from '~/models/schemas/DatingCall.schema'
 import DatingReview from '~/models/schemas/DatingReview.schema'
 import DatingConversation from '~/models/schemas/DatingConversation.schema'
-
-config()
 
 const uri = envConfig.mongoDbUri
 

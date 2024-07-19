@@ -1,6 +1,5 @@
 import { Request } from 'express'
 import { Document, ObjectId, WithId } from 'mongodb'
-import { config } from 'dotenv'
 import { countBy, flatMap } from 'lodash'
 
 import {
@@ -25,8 +24,6 @@ import { hashPassword } from '~/utils/crypto'
 import { signToken, verifyToken } from '~/utils/jwt'
 import { io, socketDatingCallUsers, socketUsers } from '~/utils/socket'
 import { delayExecution } from '~/utils/handlers'
-
-config()
 
 class UserService {
     private commonAggregateFriends: Document[] = [
