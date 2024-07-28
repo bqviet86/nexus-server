@@ -1,6 +1,5 @@
 import { Server as ServerHttp } from 'http'
 import { Server } from 'socket.io'
-import { ExtendedError } from 'socket.io/dist/namespace'
 import { ObjectId } from 'mongodb'
 
 import { envConfig } from '~/constants/config'
@@ -59,7 +58,7 @@ const initSocket = (httpServer: ServerHttp) => {
 
             next()
         } catch (error) {
-            const err = new Error('Unauthorized') as ExtendedError
+            const err = new Error('Unauthorized') as any
 
             err.data = error
             next(err)

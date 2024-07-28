@@ -2,7 +2,6 @@ import { Request } from 'express'
 import fs from 'fs'
 import path from 'path'
 import formidable, { File } from 'formidable'
-import { nanoid } from 'nanoid'
 
 import { UPLOAD_IMAGE_TEMP_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import { MEDIAS_MESSAGES } from '~/constants/messages'
@@ -93,6 +92,7 @@ export const handleUploadVideo = async ({
             return valid
         }
     })
+    const { nanoid } = await import('nanoid')
 
     return new Promise<File[]>((resolve, reject) => {
         form.parse(req, (err, fields, files) => {
