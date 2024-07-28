@@ -1,6 +1,6 @@
 import express from 'express'
 import { createServer } from 'http'
-import helmet from 'helmet'
+import helmet, { HelmetOptions } from 'helmet'
 import cors, { CorsOptions } from 'cors'
 import { Options as RateLimitOptions, rateLimit } from 'express-rate-limit'
 
@@ -41,7 +41,12 @@ databaseService.connect()
 
 // Middlewares
 app.use(express.json())
-app.use(helmet())
+
+const helmetOptions: HelmetOptions = {
+    crossOriginResourcePolicy: false
+}
+
+app.use(helmet(helmetOptions))
 
 const corsOptions: CorsOptions = {
     origin: isProduction ? envConfig.clientUrl : '*',
@@ -51,10 +56,11 @@ const corsOptions: CorsOptions = {
 app.use(cors(corsOptions))
 
 const limitOptions: Partial<RateLimitOptions> = {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    limit: 100, // Limit each IP to 100 requests per `window` (here, per 5 minutes).
     standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-    legacyHeaders: false // Disable the `X-RateLimit-*` headers.
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+    skip: (req) => req.path.startsWith('/static') // Skip rate limit for static files
 }
 
 app.use(rateLimit(limitOptions))
