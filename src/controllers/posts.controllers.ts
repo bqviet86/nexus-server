@@ -2,12 +2,13 @@ import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 
 import { POSTS_MESSAGES } from '~/constants/messages'
-import { PaginationReqQuery } from '~/models/requests/Common.requests'
 import {
     CreatePostReqBody,
     DeletePostReqParams,
+    GetNewsFeedReqQuery,
     GetPostReqParams,
     GetProfilePostsReqParams,
+    GetProfilePostsReqQuery,
     UpdatePostReqBody,
     UpdatePostReqParams
 } from '~/models/requests/Post.requests'
@@ -36,7 +37,7 @@ export const getPostController = async (req: Request<GetPostReqParams>, res: Res
 }
 
 export const getNewsFeedController = async (
-    req: Request<ParamsDictionary, any, any, PaginationReqQuery>,
+    req: Request<ParamsDictionary, any, any, GetNewsFeedReqQuery>,
     res: Response
 ) => {
     const { user_id } = req.decoded_authorization as TokenPayload
@@ -56,7 +57,7 @@ export const getNewsFeedController = async (
 }
 
 export const getProfilePostsController = async (
-    req: Request<GetProfilePostsReqParams, any, any, PaginationReqQuery>,
+    req: Request<GetProfilePostsReqParams, any, any, GetProfilePostsReqQuery>,
     res: Response
 ) => {
     const { user_id } = req.decoded_authorization as TokenPayload
