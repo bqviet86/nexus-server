@@ -1,10 +1,10 @@
-import { ParamsDictionary } from 'express-serve-static-core'
+import { ParamsDictionary, Query } from 'express-serve-static-core'
 
 import { MBTIDimension } from '~/constants/enums'
 import { PaginationReqQuery } from './Common.requests'
 import { MBTIOption } from '../Types'
 
-export interface GetAllMbtiQuestionsReqQuery extends PaginationReqQuery {
+export interface GetAllMbtiQuestionsReqQuery extends PaginationReqQuery, Query {
     question?: string
 }
 

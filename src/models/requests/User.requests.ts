@@ -1,4 +1,4 @@
-import { ParamsDictionary } from 'express-serve-static-core'
+import { ParamsDictionary, Query } from 'express-serve-static-core'
 import { JwtPayload } from 'jsonwebtoken'
 
 import { TokenTypes, Sex, UserRole, FriendStatus } from '~/constants/enums'
@@ -73,7 +73,7 @@ export interface GetAllFriendsReqParams extends ParamsDictionary {
     user_id: string
 }
 
-export interface GetAllUsersReqQuery extends PaginationReqQuery {
+export interface GetAllUsersReqQuery extends PaginationReqQuery, Query {
     name?: string
     is_active?: 'true' | 'false'
 }

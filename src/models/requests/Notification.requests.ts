@@ -1,4 +1,4 @@
-import { ParamsDictionary } from 'express-serve-static-core'
+import { ParamsDictionary, Query } from 'express-serve-static-core'
 
 import { NotificationTag, NotificationType } from '~/constants/enums'
 import { PaginationReqQuery } from './Common.requests'
@@ -12,7 +12,7 @@ export interface CreateNotificationBody {
     payload: NotificationPayload
 }
 
-export interface GetAllNotificationsReqQuery extends PaginationReqQuery {
+export interface GetAllNotificationsReqQuery extends PaginationReqQuery, Query {
     tag?: NotificationTag
 }
 

@@ -1,8 +1,8 @@
-import { ParamsDictionary } from 'express-serve-static-core'
+import { ParamsDictionary, Query } from 'express-serve-static-core'
 
 import { PaginationReqQuery } from './Common.requests'
 
-export interface GetAllConstructiveQuestionsReqQuery extends PaginationReqQuery {
+export interface GetAllConstructiveQuestionsReqQuery extends PaginationReqQuery, Query {
     question?: string
 }
 

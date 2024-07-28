@@ -1,6 +1,4 @@
-import { Query } from 'express-serve-static-core'
-
-export interface PaginationReqQuery extends Query {
+export interface PaginationReqQuery {
     page: string
     limit: string
 }
