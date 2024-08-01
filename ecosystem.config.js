@@ -2,9 +2,8 @@
 module.exports = {
     apps: [
         {
-            name: 'nexus',
-            script: './dist/index.js',
-            screenX: 0,
+            name: 'nexus-server',
+            script: 'node dist/index.js',
             env: {
                 NODE_ENV: 'development'
             },
