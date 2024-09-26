@@ -416,22 +416,26 @@ class PostService {
         limit: number
     }) {
         const previousPostIds = socketUsers[user_id].previous_post_ids_profile.map((id) => new ObjectId(id))
+        const firstPreviousPost = await databaseService.posts.findOne({
+            _id: previousPostIds[previousPostIds.length - 1]
+        })
+        const firstPreviousPostCreatedAt = firstPreviousPost?.created_at
         const [result, total_posts] = await Promise.all([
             databaseService.posts
                 .aggregate<{ post: Post }>([
                     {
                         $match: {
                             ...(page > 1 ? { _id: { $nin: previousPostIds } } : {}),
-                            user_id: new ObjectId(profile_id)
+                            user_id: new ObjectId(profile_id),
+                            ...(page > 1 && firstPreviousPostCreatedAt
+                                ? { created_at: { $lte: firstPreviousPostCreatedAt } }
+                                : {})
                         }
                     },
                     {
                         $sort: {
                             created_at: -1
                         }
-                    },
-                    {
-                        $skip: (page - 1) * limit
                     },
                     {
                         $limit: limit
